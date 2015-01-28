@@ -1,0 +1,53 @@
+package network
+
+import (
+		."fmt"
+		 "net"
+)
+
+func Send(sendChan chan string){
+	BROADCAST_IPv4 := net.IPv4(129, 241, 187, 255)
+	port := 40000 + 11
+	socket, err := net.DialUDP("udp4", nil, &net.UDPAddr{
+		IP: BROADCAST_IPv4,
+		Port: port,
+	})
+	if err != nil {
+		Printf("error send")
+	}
+	
+	for {
+		data := []byte(<-sendChan)
+	
+		_, err := socket.Write(data)
+		if err != nil {
+			Printf("error receive 2")
+		}
+	}
+}
+
+func Receive(){
+	//port := 40000 + 11
+	addr, _ := net.ResolveUDPAddr("udp4", ":40011")
+	socket, err := net.ListenUDP("udp4", addr)
+	if err != nil {
+		Printf("error receive 1")}
+	
+	for {
+		data := make([]byte, 256)
+		read, remoteAddr, err := socket.ReadFromUDP(data)
+		    
+		if err != nil {
+			Printf("error receive 2")}
+		
+		Printf("received %d bytes from %s: %s\n", read, remoteAddr, data)
+	}
+}
+
+
+
+
+
+
+
+

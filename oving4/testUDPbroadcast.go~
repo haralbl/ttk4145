@@ -1,0 +1,30 @@
+package main
+
+import (
+		."fmt"
+		 "net"
+		 "time"
+)
+
+func main(){
+	BROADCAST_IPv4 := net.IPv4(129, 241, 187, 255)
+	port := 20000 + 10
+	socket, err := net.DialUDP("udp4", nil, &net.UDPAddr{
+		IP: BROADCAST_IPv4,
+		Port: port,
+	})
+	if err != nil {
+		Printf("error send")}
+	
+	for {
+		data := []byte("It's a trap!\x00")
+		
+		_, err := socket.Write(data)
+		
+		if err != nil {
+			Printf("error receive 2")}
+		
+		Printf("sent bytes\n")
+		time.Sleep(1000*time.Millisecond)
+	}
+}
