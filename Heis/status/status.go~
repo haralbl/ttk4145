@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	numberOfElevators	int = 3
-	numberOfFloors		int = 4
+	numberOfElevators	= 3
+	numberOfFloors		= 4
 )
 
 var (
@@ -73,9 +73,9 @@ func UpdateStatus(status string) {
 	for i:=0; i<numberOfElevators; i++ {
 		field = strings.Split(statusFields[3+i], " ")
 		for j:=0; j<numberOfFloors; j++ {
-			ordersUp[i][j],_	= strconv.Atoi(field[i+j])
-			ordersDown[i][j],_	= strconv.Atoi(field[i+j])
-			ordersOut[i][j],_	= strconv.Atoi(field[i+j])
+			ordersUp[i][j],_	= strconv.Atoi(field[3*j+0])
+			ordersDown[i][j],_	= strconv.Atoi(field[3*j+1])
+			ordersOut[i][j],_	= strconv.Atoi(field[3*j+2])
 		}
 	}
 }

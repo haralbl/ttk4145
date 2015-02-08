@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	numberOfElevators	int = 3
-	numberOfFloors		int = 4
+	numberOfElevators	= 3
+	numberOfFloors		= 4
 )
 
 var (
@@ -73,15 +73,15 @@ func UpdateStatus(status string) {
 	for i:=0; i<numberOfElevators; i++ {
 		field = strings.Split(statusFields[3+i], " ")
 		for j:=0; j<numberOfFloors; j++ {
-			ordersUp[i][j],_	= strconv.Atoi(field[i+j])
-			ordersDown[i][j],_	= strconv.Atoi(field[i+j])
-			ordersOut[i][j],_	= strconv.Atoi(field[i+j])
+			ordersUp[i][j],_	= strconv.Atoi(field[3*j+0])
+			ordersDown[i][j],_	= strconv.Atoi(field[3*j+1])
+			ordersOut[i][j],_	= strconv.Atoi(field[3*j+2])
 		}
 	}
 }
 
 func Initialize() {
-	activeElevators[0] = getLocalIP()
+	activeElevators[0] = network.GetLocalIP()
 	
 	for i:=0; i<numberOfElevators; i++ {
 		lastPositions[0]	= 0
@@ -89,29 +89,11 @@ func Initialize() {
 		
 		for j:=0; j<numberOfFloors; j++ {
 			ordersUp[i][j]		= 0
-			ordersDown[i][j]	= 1
+			ordersDown[i][j]	= 0
 			ordersOut[i][j]		= 0
 		}
 	}
 }
-
-func getLocalIP() (localIP string) {
-	addrs, err := net.InterfaceAddrs()
-    if err != nil {
-    	Println(err)
-    }
-    
-    for _, address := range addrs {
-		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-		    	localIP = ipnet.IP.String()
-			}
-		}
-    }
-    
-	return
-}
-
 
 
 
