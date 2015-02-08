@@ -1,10 +1,10 @@
 package status
 
 import (
-	."fmt"
-	"net"
 	"strings"
 	"strconv"
+	"./Network"
+	//"./Timer"
 )
 
 const (
@@ -81,7 +81,10 @@ func UpdateStatus(status string) {
 }
 
 func Initialize() {
-	activeElevators[0] = network.GetLocalIP()
+	for i:=0; i<numberOfElevators; i++ {
+		activeElevators[i] = "empty"
+	} 
+	activeElevators[0] = Network.GetLocalIP()
 	
 	for i:=0; i<numberOfElevators; i++ {
 		lastPositions[0]	= 0
@@ -94,6 +97,71 @@ func Initialize() {
 		}
 	}
 }
+
+func isElevatorInList(elevatorIP string) int {
+	for i:=0; i<numberOfElevators; i++ {
+		if activeElevators[i] == elevatorIP {
+			return i
+		}
+	}
+	return -1
+}
+
+func addElevator(elevatorIP string) int {
+	alreadyAdded	:= false
+	full			:= true
+	nextIndex		:= 0
+	for i:=numberOfElevators-1; i>-1; i-- {
+		if activeElevators[i] == elevatorIP {
+			alreadyAdded = true
+		}
+		if activeElevators[i] == "empty" {
+			full = false
+			nextIndex = i
+		}
+	}
+	if !alreadyAdded && !full {
+		activeElevators[nextIndex] = elevatorIP
+		return nextIndex
+	}
+	return -1
+}		
+
+func removeElevator(elevatorN int) {
+	/*for i:=0; i<numberOfElevators; i++ {
+		if activeElevators[i] == elevatorIP {
+			activeElevators[i] = "empty"
+		}
+	}*/
+	activeElevators[elevatorN] = "empty"
+}
+
+func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan chan int) {
+	var elevatorIP	string
+	var elevatorN	int
+	for {
+		select {
+		case elevatorIP = <- receiveAliveMessageChan:
+			elevatorN = isElevatorInList(elevatorIP)
+			if elevatorN == -1 {
+				elevatorN = addElevator(elevatorIP)
+			}
+			//elevatorTimerChan <- elevatorN	still nonfunctional
+		case elevatorN = <- elevatorTimerChan:
+			removeElevator(elevatorN)
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
 
 
 

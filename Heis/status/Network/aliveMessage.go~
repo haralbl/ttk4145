@@ -31,16 +31,16 @@ func ReceiveAliveMessage(receiveAliveMessageChan chan string){
 	addr, _ := net.ResolveUDPAddr("udp4", ":57017")
 	socket, err := net.ListenUDP("udp4", addr)
 	if err != nil {
-		Printf("error ReceiveAliveMessage 1")}
-	
+		Printf("error ReceiveAliveMessage 1")
+	}
 	for {
 		data := make([]byte, 256)
 		
 		_,_,err := socket.ReadFromUDP(data)
 		    
 		if err != nil {
-			Printf("error ReceiveAliveMessage 2")}
-		
+			Printf("error ReceiveAliveMessage 2")
+		}
 		receiveAliveMessageChan <- string(data[:256])
 	}
 }

@@ -15,6 +15,7 @@ var (
 )
 
 func floorReached() {
+	// TODO set floor lights
 	switch state {
 	case IDLE
 	case DOOR_OPEN

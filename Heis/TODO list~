@@ -1,0 +1,4 @@
+Calling GetLocalIP() more than once
+/timer assumes 3 elevators
+checking if oneself is alive...
+correct logic from elevatorIP to elevatorN in /status? (use one chan instead of two?)

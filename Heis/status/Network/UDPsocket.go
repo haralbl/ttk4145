@@ -1,4 +1,4 @@
-package network
+package Network
 
 import (
 	."fmt"
@@ -13,7 +13,7 @@ func Send(sendChan chan string){
 		Port: port,
 	})
 	if err != nil {
-		Printf("error send 1")
+		Printf("error Send 1")
 	}
 	
 	for {
@@ -21,7 +21,7 @@ func Send(sendChan chan string){
 	
 		_, err := socket.Write(data)
 		if err != nil {
-			Printf("error send 2")
+			Printf("error Send 2")
 		}
 	}
 }
@@ -30,14 +30,14 @@ func Receive(receiveChan chan string){
 	addr, _ := net.ResolveUDPAddr("udp4", ":58017")
 	socket, err := net.ListenUDP("udp4", addr)
 	if err != nil {
-		Printf("error receive 1")}
+		Printf("error Receive 1")}
 	
 	for {
 		data := make([]byte, 256)
 		_,_,err := socket.ReadFromUDP(data)
 		    
 		if err != nil {
-			Printf("error receive 2")}
+			Printf("error Receive 2")}
 		
 		receiveChan <- string(data[:256])
 	}

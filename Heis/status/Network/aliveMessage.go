@@ -1,4 +1,4 @@
-package network
+package Network
 
 import (
 	."fmt"
@@ -18,7 +18,7 @@ func SendAliveMessage() {
 	}
 	
 	for {
-		data := []byte("I'm alive!")
+		data := []byte(GetLocalIP())
 		_, err := socket.Write(data)
 		if err != nil {
 			Printf("error SendAliveMessage 2")
@@ -31,19 +31,36 @@ func ReceiveAliveMessage(receiveAliveMessageChan chan string){
 	addr, _ := net.ResolveUDPAddr("udp4", ":57017")
 	socket, err := net.ListenUDP("udp4", addr)
 	if err != nil {
-		Printf("error ReceiveAliveMessage 1")}
-	
+		Printf("error ReceiveAliveMessage 1")
+	}
 	for {
 		data := make([]byte, 256)
+		
 		_,_,err := socket.ReadFromUDP(data)
 		    
 		if err != nil {
-			Printf("error ReceiveAliveMessage 2")}
-		
+			Printf("error ReceiveAliveMessage 2")
+		}
 		receiveAliveMessageChan <- string(data[:256])
 	}
 }
 
+func GetLocalIP() (localIP string) {
+	addrs, err := net.InterfaceAddrs()
+    if err != nil {
+    	Println(err)
+    }
+    
+    for _, address := range addrs {
+		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+		    	localIP = ipnet.IP.String()
+			}
+		}
+    }
+    
+	return
+}
 
 
 

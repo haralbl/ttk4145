@@ -17,32 +17,32 @@ var (
 func floorReached() {
 	// TODO set floor lights
 	switch state {
-	case IDLE
-	case DOOR_OPEN
-	case MOVING
+	case IDLE:
+	case DOOR_OPEN:
+	case MOVING:
 	}
 }
 
 func doorTimerOut() {
 	switch state {
-	case IDLE
-	case DOOR_OPEN
-	case MOVING
+	case IDLE:
+	case DOOR_OPEN:
+	case MOVING:
 	}
 }
 
 func newOrder() {
 	switch state {
-	case IDLE
-	case DOOR_OPEN
-	case MOVING
+	case IDLE:
+	case DOOR_OPEN:
+	case MOVING:
 	}
 }
 
 func outOrder() {
 	switch state {
-	case IDLE
-	case DOOR_OPEN
-	case MOVING
+	case IDLE:
+	case DOOR_OPEN:
+	case MOVING:
 	}
 }
