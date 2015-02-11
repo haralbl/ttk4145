@@ -1,9 +1,11 @@
 package status
 
 import (
+	//."fmt"
 	"strings"
 	"strconv"
 	"network"
+	//"time"
 	//"./Timer"
 )
 
@@ -54,7 +56,7 @@ func GetStatus() (status string) {
 	return
 }
 
-func UpdateStatus(status string) {
+func Update(status string) {
 	statusFields := strings.Split(status, "\n")
 	
 	field := strings.Split(statusFields[0], " ")
@@ -142,7 +144,10 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 	for {
 		select {
 		case elevatorIP = <- receiveAliveMessageChan:
+			elevatorIP = elevatorIP[0:15]
+			
 			elevatorN = isElevatorInList(elevatorIP)
+			
 			if elevatorN == -1 {
 				elevatorN = addElevator(elevatorIP)
 			}

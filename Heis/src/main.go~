@@ -22,6 +22,8 @@ func main() {
 	
 	status.Initialize()
 	
+
+	
 	go network.Send(sendChan)
 	go network.Receive(receiveChan)
 	go network.SendAliveMessage()
@@ -31,24 +33,16 @@ func main() {
 	//go driver.Test()
 	
 	
-	go func(receiveChan chan string) {
-		for {
-			Println(<- receiveChan)
-		}
-	}(receiveChan)
-	
-	
-	
+	time.Sleep(time.Millisecond * 1000)
 	
 	message = status.GetStatus()
+	println(message)
+	//sendChan <- message
 	
-	time.Sleep(time.Millisecond * 3000)
-	sendChan <- message
-	time.Sleep(time.Millisecond * 1000)
-	sendChan <- message
-	time.Sleep(time.Millisecond * 1000)
-	sendChan <- message
-
+	message = <- receiveChan
+	status.Update(message)
+	message = status.GetStatus()
+	println(message)
 	
 	
 	

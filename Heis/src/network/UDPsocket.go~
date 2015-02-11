@@ -28,7 +28,7 @@ func Send(sendChan chan string){
 }
 
 func Receive(receiveChan chan string){
-	addr, _ := net.ResolveUDPAddr("udp4", ":30000")
+	addr, _ := net.ResolveUDPAddr("udp4", ":58017")
 	socket, err := net.ListenUDP("udp4", addr)
 	if err != nil {
 		Printf("error Receive 1")}

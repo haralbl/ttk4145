@@ -1,4 +1,4 @@
-package Network
+package network
 
 import (
 	."fmt"
@@ -55,6 +55,7 @@ func GetLocalIP() (localIP string) {
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
 		    	localIP = ipnet.IP.String()
+		    	Printf("lengde: %d\n", len(localIP))
 			}
 		}
     }
