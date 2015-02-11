@@ -2,7 +2,9 @@ package main
 
 import (
 	."fmt"
-	"./status"
+	"status"
+	"network"
+	"timer"
 )
 
 var (
@@ -18,12 +20,12 @@ func main() {
 	
 	status.Initialize()
 	
-	go status.Network.Send(sendChan)
-	go status.Network.Receive(receiveChan)
-	go status.Network.SendAliveMessage()
-	go status.Network.ReceiveAliveMessage(receiveAliveMessageChan)
+	go network.Send(sendChan)
+	go network.Receive(receiveChan)
+	go network.SendAliveMessage()
+	go network.ReceiveAliveMessage(receiveAliveMessageChan)
 	
-	go status.timer.elevatorTimer(elevatorTimerChan)
+	go timer.ElevatorTimer(elevatorTimerChan)
 	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan)
 	
 	

@@ -10,8 +10,8 @@ var (
 	timer2 time.Time
 )
 
-func elevatorTimer(elevatorTimerChan chan int) {
-	elevatorN := -1
+func ElevatorTimer(elevatorTimerChan chan int) {
+	elevatorN := 0
 	//when elevatorN <- elevatorTimerChan
 		switch elevatorN {
 		case 0:

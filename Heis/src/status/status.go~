@@ -3,7 +3,7 @@ package status
 import (
 	"strings"
 	"strconv"
-	"./Network"
+	"network"
 	//"./Timer"
 )
 

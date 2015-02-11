@@ -3,3 +3,8 @@ Calling GetLocalIP() more than once
 checking if oneself is alive...
 correct logic from elevatorIP to elevatorN in /status?
 use buffers in any of the channels?
+
+script:
+	export GOROOT=/usr/lib/go
+	export GOPATH=$HOME/ttk4145/Heis
+

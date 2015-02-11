@@ -1,7 +1,6 @@
 package timer
 
 import (
-	."fmt"
 	"time"
 )
 
@@ -11,7 +10,7 @@ var (
 	timer2 time.Time
 )
 
-func elevatorTimer(elevatorTimerChan chan int) {
+func ElevatorTimer(elevatorTimerChan chan int) {
 	elevatorN := -1
 	//when elevatorN <- elevatorTimerChan
 		switch elevatorN {
