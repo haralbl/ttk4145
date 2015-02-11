@@ -4,7 +4,9 @@ import (
 	."fmt"
 	"status"
 	"network"
-	"timer"
+	"time"
+	//"timer"
+	//"driver"
 )
 
 var (
@@ -24,24 +26,29 @@ func main() {
 	go network.Receive(receiveChan)
 	go network.SendAliveMessage()
 	go network.ReceiveAliveMessage(receiveAliveMessageChan)
-	
-	go timer.elevatorTimer(elevatorTimerChan)
+	//go timer.ElevatorTimer(elevatorTimerChan)
 	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan)
+	//go driver.Test()
 	
 	
+	go func(receiveChan chan string) {
+		for {
+			Println(<- receiveChan)
+		}
+	}(receiveChan)
 	
 	
 	
 	
 	message = status.GetStatus()
-	println(message)
+	
+	time.Sleep(time.Millisecond * 3000)
 	sendChan <- message
-	
-	
-	
+	time.Sleep(time.Millisecond * 1000)
+	sendChan <- message
+	time.Sleep(time.Millisecond * 1000)
+	sendChan <- message
 
-	
-	
 	
 	
 	

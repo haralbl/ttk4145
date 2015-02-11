@@ -5,16 +5,16 @@ import(
 	"fmt"
 )
 
-type buttonType int
+
 type direction int
 
 const(
-	NFloors 		int = 4
-	nButtonTypes 	int = 3
+	NFloors 			int = 4
+	NButtonTypes 		int = 3
 
-	BUTTON_CALL_UP buttonType 	= 0
-	BUTTON_CALL_DOWN buttonType = 1
-	BUTTON_COMMAND buttonType 	= 2
+	BUTTON_CALL_UP 		int = 0
+	BUTTON_CALL_DOWN 	int = 1
+	BUTTON_COMMAND 		int = 2
 
     UP direction = 1
     DOWN direction = -1
@@ -22,7 +22,7 @@ const(
 )
 
 var(
-	lamp_channel_matrix [NFloors][nButtonTypes] int = [NFloors][nButtonTypes]int{
+	lamp_channel_matrix [NFloors][NButtonTypes] int = [NFloors][NButtonTypes]int{
 	    {LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
 	    {LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
 	    {LIGHT_UP3, LIGHT_DOWN3, LIGHT_COMMAND3},
@@ -30,7 +30,7 @@ var(
 	}
 
 
-	button_channel_matrix [NFloors][nButtonTypes] int = [NFloors][nButtonTypes]int{
+	button_channel_matrix [NFloors][NButtonTypes] int = [NFloors][NButtonTypes]int{
 	    {BUTTON_UP1, BUTTON_DOWN1, BUTTON_COMMAND1},
 	    {BUTTON_UP2, BUTTON_DOWN2, BUTTON_COMMAND2},
 	    {BUTTON_UP3, BUTTON_DOWN3, BUTTON_COMMAND3},
@@ -70,8 +70,7 @@ func Init() int{
 }
 
 
-func Set_motor_direction(dir direction) {
-	fmt.Printf("setting motor dir\n")
+func set_motor_direction(dir direction) {
     if dir == 0 {
         io_write_analog(MOTOR, 0)
     } else if dir > 0 {
@@ -139,15 +138,15 @@ func set_floor_indicator(floor int) {
     }
 }
 
-func get_button_signal(button buttonType,floor int) int{
+func get_button_signal(button int,floor int) int{
     if floor < 0 || floor >= NFloors {
-        fmt.Printf("bad combination of button and floor")
+        fmt.Printf("reading button on invalid floor")
     }
     if (!(button == BUTTON_CALL_UP && floor == NFloors - 1)) || (!(button == BUTTON_CALL_DOWN && floor == 0)) {
         fmt.Printf("bad combination of button and floor")
     }
     if (!(button == BUTTON_CALL_UP || button == BUTTON_CALL_DOWN || button == BUTTON_COMMAND)) {
-        fmt.Printf("bad combination of button and floor")
+        fmt.Printf("nonvalid button type")
     }
 
     if io_read_bit(button_channel_matrix[floor][button]) != 0 {
@@ -157,10 +156,10 @@ func get_button_signal(button buttonType,floor int) int{
     }
 }
 
-func set_button_lamp(button buttonType, floor int, value int) {
+func set_button_lamp(button int, floor int, value int) {
     if floor < 0 || floor >= NFloors {
     	//os.Exit(1)
-    	fmt.Printf("bad combination of button and floor")
+    	fmt.Printf("setting lamp in nonvalid floor")
     }
     if (!(button == BUTTON_CALL_UP && floor == NFloors - 1)) || (!(button == BUTTON_CALL_DOWN && floor == 0)) {
     	//os.Exit(1)
@@ -168,7 +167,7 @@ func set_button_lamp(button buttonType, floor int, value int) {
     }
     if (!(button == BUTTON_CALL_UP || button == BUTTON_CALL_DOWN || button == BUTTON_COMMAND)) {
     	//os.Exit(1)
-    	fmt.Printf("bad combination of button and floor")
+    	fmt.Printf("nonvalid button type")
     }
 
     if value != 0 {
