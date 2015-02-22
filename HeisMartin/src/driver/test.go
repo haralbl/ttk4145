@@ -17,11 +17,12 @@ func Test() {
 	
 	//prev_floor := 0
 	set_door_open_lamp(1)
+	/*
     for {
     	if Get_floor_sensor_signal() != -1  && 0 == 1 {
     		fmt.Println(Get_floor_sensor_signal())
     	}
-    	
+    */	
     	/*
     	//fmt.Printf("I'm running\n")
         // Change direction when we reach top/bottom floor
@@ -51,7 +52,7 @@ func Test() {
         /*} else {
         	for i := 0; i < 4; i++
         }*/
-		
+	/*	
 		if get_obstruction_signal() == 1 {
 			set_stop_lamp(1)
 		}
@@ -63,4 +64,5 @@ func Test() {
             break
         }
     }
+    */ 
 }

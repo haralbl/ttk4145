@@ -132,6 +132,8 @@ func FloorPoller(floorChan chan int) {
 		if floorPollerFlag == 0 { 
 			if currFloor != -1 { 
 				floorPollerFlag = 1 
+				fmt.Println("currFloor:") 
+				fmt.Println(currFloor) 
 				floorChan <- currFloor 
 			} 
 		} else { 

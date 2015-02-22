@@ -25,7 +25,7 @@ var (
 	ordersOut			[numberOfElevators][numberOfFloors]int
 )
 
-func Get() (status string) {
+func GetStatus() (status string) {
 	status = ""
 	for i:=0; i<numberOfElevators; i++ {
 		status += activeElevators[i]
@@ -130,6 +130,11 @@ func addElevator(elevatorIP string) int {
 }		
 
 func removeElevator(elevatorN int) {
+	/*for i:=0; i<numberOfElevators; i++ {
+		if activeElevators[i] == elevatorIP {
+			activeElevators[i] = "empty"
+		}
+	}*/
 	activeElevators[elevatorN] = "empty"
 }
 
@@ -139,9 +144,6 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 	for {
 		select {
 		case elevatorIP = <- receiveAliveMessageChan:
-			
-			
-			
 			elevatorIP = elevatorIP[0:15]
 			
 			elevatorN = isElevatorInList(elevatorIP)
@@ -149,7 +151,7 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 			if elevatorN == -1 {
 				elevatorN = addElevator(elevatorIP)
 			}
-			elevatorTimerChan <- elevatorN
+			//elevatorTimerChan <- elevatorN	still nonfunctional
 		case elevatorN = <- elevatorTimerChan:
 			removeElevator(elevatorN)
 		}

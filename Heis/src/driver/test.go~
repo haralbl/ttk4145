@@ -18,6 +18,11 @@ func Test() {
 	//prev_floor := 0
 	set_door_open_lamp(1)
     for {
+    	if Get_floor_sensor_signal() != -1  && 0 == 1 {
+    		fmt.Println(Get_floor_sensor_signal())
+    	}
+    	
+    	/*
     	//fmt.Printf("I'm running\n")
         // Change direction when we reach top/bottom floor
         if Get_floor_sensor_signal() == NFloors - 1 {
@@ -41,12 +46,16 @@ func Test() {
         		set_button_lamp(btntype, flr, get_button_signal(btntype, flr))
         	}
         }
+        */
         
         /*} else {
         	for i := 0; i < 4; i++
         }*/
 		
-
+		if get_obstruction_signal() == 1 {
+			set_stop_lamp(1)
+		}
+		
         // Stop elevator and exit program if the stop button is pressed
         if Get_stop_signal() != 0 {
             set_motor_direction(STOP)

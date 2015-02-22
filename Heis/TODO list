@@ -1,10 +1,13 @@
 Calling GetLocalIP() more than once
 /timer assumes 3 elevators
 checking if oneself is alive...
-correct logic from elevatorIP to elevatorN in /status?
 use buffers in any of the channels?
+2 seconds until timeout for dead elevators
+dont update IP list in status!
 
 script:
-	export GOROOT=/usr/lib/go
+	export GOROOT=/usr/lib/go      (trenger mest sanns ikke denne, virket uten!!)
 	export GOPATH=$HOME/ttk4145/Heis
-
+	cd src
+	go build main.go
+	go run main.go
