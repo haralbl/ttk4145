@@ -3,6 +3,7 @@ package driver
 import(
 	"os"
 	"fmt"
+	"time"
 )
 
 
@@ -71,8 +72,9 @@ func Init() int{
 
 func UpButtonPoller(upButtonChan chan int) {
 	var upButtonFlags [3]int
-	//upButtonFlag := 0
+
 	for {
+
 		for i := 0; i < NFloors-1; i++ {
 			if upButtonFlags[i] == 0 {
 				if get_button_signal(BUTTON_CALL_UP, i) == 1 {
@@ -85,6 +87,7 @@ func UpButtonPoller(upButtonChan chan int) {
 				}
 			}
 		}
+		time.Sleep(time.Millisecond*10)
 	}
 }
 
@@ -103,6 +106,7 @@ func DownButtonPoller(downButtonChan chan int) {
 				}
 			}
 		}
+		time.Sleep(time.Millisecond*10)
 	}
 }
 
@@ -121,6 +125,7 @@ func CommandButtonPoller(commandButtonChan chan int) {
 				}
 			}
 		}
+		time.Sleep(time.Millisecond*10)
 	}
 }
 
@@ -139,6 +144,7 @@ func FloorPoller(floorChan chan int) {
 				floorPollerFlag = 0 
 			} 
 		} 
+		time.Sleep(time.Millisecond*10)
 	} 
 }
 

@@ -3,6 +3,7 @@ package driver
 import(
 	"os"
 	"fmt"
+	"time"
 )
 
 
@@ -16,9 +17,9 @@ const(
 	BUTTON_CALL_DOWN 	int = 1
 	BUTTON_COMMAND 		int = 2
 
-    UP direction = 1
-    DOWN direction = -1
-    STOP direction = 0
+    	UP direction 		= 1
+    	DOWN direction 		= -1
+    	STOP direction		= 0
 )
 
 var(
@@ -69,6 +70,83 @@ func Init() int{
 
 }
 
+func UpButtonPoller(upButtonChan chan int) {
+	var upButtonFlags [3]int
+
+	for {
+
+		for i := 0; i < NFloors-1; i++ {
+			if upButtonFlags[i] == 0 {
+				if get_button_signal(BUTTON_CALL_UP, i) == 1 {
+					upButtonFlags[i] = 1
+					upButtonChan <- i
+				}
+			} else {
+				if get_button_signal(BUTTON_CALL_UP, i) == 0 {
+					upButtonFlags[i] = 0
+				}
+			}
+		}
+		time.Sleep(time.Millisecond*1)
+	}
+}
+
+func DownButtonPoller(downButtonChan chan int) {
+	var downButtonFlags [3]int
+	for {
+		for i := 1; i < NFloors; i++ {
+			if downButtonFlags[i-1] == 0 {
+				if get_button_signal(BUTTON_CALL_DOWN, i) == 1 {
+					downButtonFlags[i-1] = 1
+					downButtonChan <- i
+				}
+			} else {
+				if get_button_signal(BUTTON_CALL_DOWN, i) == 0 {
+					downButtonFlags[i-1] = 0
+				}
+			}
+		}
+		time.Sleep(time.Millisecond*10)
+	}
+}
+
+func CommandButtonPoller(commandButtonChan chan int) {
+	var commandButtonFlags [4]int
+	for {
+		for i := 0; i < NFloors; i++ {
+			if commandButtonFlags[i] == 0 {
+				if get_button_signal(BUTTON_COMMAND, i) == 1 {
+					commandButtonFlags[i] = 1
+					commandButtonChan <- i
+				}
+			} else {
+				if get_button_signal(BUTTON_COMMAND, i) == 0 {
+					commandButtonFlags[i] = 0
+				}
+			}
+		}
+		time.Sleep(time.Millisecond*10)
+	}
+}
+
+func FloorPoller(floorChan chan int) { 
+	floorPollerFlag := 0 
+	currFloor := -1 
+	for { 
+		currFloor = Get_floor_sensor_signal() 
+		if floorPollerFlag == 0 { 
+			if currFloor != -1 { 
+				floorPollerFlag = 1 
+				floorChan <- currFloor 
+			} 
+		} else { 
+			if currFloor == -1 { 
+				floorPollerFlag = 0 
+			} 
+		} 
+		time.Sleep(time.Millisecond*10)
+	} 
+}
 
 func set_motor_direction(dir direction) {
     if dir == 0 {
@@ -143,7 +221,7 @@ func get_button_signal(button int,floor int) int{
         fmt.Printf("reading button on invalid floor")
     }
     if (!(button == BUTTON_CALL_UP && floor == NFloors - 1)) || (!(button == BUTTON_CALL_DOWN && floor == 0)) {
-        fmt.Printf("bad combination of button and floor")
+        //fmt.Printf("bad combination of button and floor")
     }
     if (!(button == BUTTON_CALL_UP || button == BUTTON_CALL_DOWN || button == BUTTON_COMMAND)) {
         fmt.Printf("nonvalid button type")
@@ -163,7 +241,7 @@ func set_button_lamp(button int, floor int, value int) {
     }
     if (!(button == BUTTON_CALL_UP && floor == NFloors - 1)) || (!(button == BUTTON_CALL_DOWN && floor == 0)) {
     	//os.Exit(1)
-    	fmt.Printf("bad combination of button and floor")
+    	//fmt.Printf("bad combination of button and floor")
     }
     if (!(button == BUTTON_CALL_UP || button == BUTTON_CALL_DOWN || button == BUTTON_COMMAND)) {
     	//os.Exit(1)
