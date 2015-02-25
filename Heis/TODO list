@@ -1,9 +1,12 @@
-Calling GetLocalIP() more than once
-/timer assumes 3 elevators
-checking if oneself is alive...
-use buffers in any of the channels?
-2 seconds until timeout for dead elevators
-dont update IP list in status!
+TODO:
+	Calling GetLocalIP() more than once
+	/timer assumes 3 elevators
+	checking if oneself is alive...
+	use buffers in any of the channels?
+	2 seconds until timeout for dead elevators
+	dont update IP list in status! + add mask (for new orders)
+	
+	func Delegate() regn ut hvilken heis som tar ordre
 
 script:
 	export GOROOT=/usr/lib/go      (trenger mest sanns ikke denne, virket uten!!)
@@ -11,3 +14,15 @@ script:
 	cd src
 	go build main.go
 	go run main.go
+	
+Plan:
+	når knappetrykk registreres, etasje nåes eller ordre fullføres:
+		Broadcast NyOrdreMelding: status (med timestamp) + maske (markert ny ordre)
+		start AckTimer
+		hvis AckTimer timer ut:
+			ta ordre selv
+	når NyOrdreMelding mottas:
+		regn ut hvilken heis som tar ordren (denne funksjonen legger også til ordre i korrekt kø og setter heisen i gang?)
+		hvis du skal ta ordren:
+			send Ack
+
