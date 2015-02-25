@@ -4,7 +4,7 @@ import (
 	."fmt"
 	"status"
 	"network"
-	//"time"
+	"time"
 	"timer"
 	"driver"
 	//"strings"
@@ -81,23 +81,23 @@ func main() {
 		}
 	}(floorChan)
 
-	
-	
-	/*for {
-		time.Sleep(time.Millisecond * 1000)
-		st := strings.Split(status.Get(), "\n")
-		Printf("Active: %s\n", st[0])
-	}*/
-		
-
+	go func() {
+		for {
+			message = <- receiveChan
+			status.Update(message)
+			message = status.Get()
+			println(message)
+		}
+	}()
 	
 	for {
-		//sendChan <- message
-		message = <- receiveChan
-		status.Update(message)
-		message = status.Get()
-		println(message)
+		time.Sleep(time.Millisecond * 1000)
+		st := status.Get()
+		Printf("Active: %s\n", st)
 	}
+		
+
+
 
 	
 	Println(<-doneChan)
