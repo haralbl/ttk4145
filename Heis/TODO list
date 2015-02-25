@@ -3,10 +3,8 @@ TODO:
 	/timer assumes 3 elevators
 	checking if oneself is alive...
 	use buffers in any of the channels?
-	2 seconds until timeout for dead elevators
-	x dont update IP list in status! + add mask (for new orders)
 	
-	func Delegate() regn ut hvilken heis som tar ordre
+	func ElevatorSelector() regn ut hvilken heis som tar ordre
 
 script:
 	export GOROOT=/usr/lib/go      (trenger mest sanns ikke denne, virket uten!!)
@@ -16,13 +14,17 @@ script:
 	go run main.go
 	
 Plan:
-	når knappetrykk registreres, etasje nåes eller ordre fullføres:
-		Broadcast NyOrdreMelding: status (med timestamp) + maske (markert ny ordre)
-		start AckTimer
+	når knappetrykk registreres // , etasje nåes eller ordre fullføres:
+		regn ut hvilken heis som tar ordren, tempStatus = status || ny ordre
+		Broadcast NyOrdreMelding: tempStatus
+		start en AckTimer og spam alle heiser
+		hvis noen dør:
+			slutt å spam
 		hvis AckTimer timer ut:
 			ta ordre selv
+		status = tempStatus
 	når NyOrdreMelding mottas:
-		regn ut hvilken heis som tar ordren (denne funksjonen legger også til ordre i korrekt kø og setter heisen i gang?)
+		legg til ordre på rett sted i status
 		hvis du skal ta ordren:
 			send Ack
 

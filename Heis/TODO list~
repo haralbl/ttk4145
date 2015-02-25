@@ -3,8 +3,6 @@ TODO:
 	/timer assumes 3 elevators
 	checking if oneself is alive...
 	use buffers in any of the channels?
-	2 seconds until timeout for dead elevators
-	dont update IP list in status! + add mask (for new orders)
 	
 	func Delegate() regn ut hvilken heis som tar ordre
 
