@@ -50,11 +50,8 @@ func main() {
 	//poller lagt til
 	
 	go driver.UpButtonPoller(upButtonChan)
-	
 	go driver.DownButtonPoller(downButtonChan)
-	
 	go driver.CommandButtonPoller(commandButtonChan)
-	
 	go driver.FloorPoller(floorChan)
 	
 	

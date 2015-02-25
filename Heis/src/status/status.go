@@ -56,27 +56,27 @@ func Get() (status string) {
 	
 	// Mask: used for new orders
 	for i:=0; i<numberOfElevators; i++ {
-		status += 0
+		status += strconv.Itoa(0)
 		status += " "
 	}
 	status += "\n"
 	for i:=0; i<numberOfElevators; i++ {
-		status += 0
+		status += strconv.Itoa(0)
 		status += " "
 	}
 	status += "\n"
 	for i:=0; i<numberOfElevators; i++ {
-		status += 0
+		status += strconv.Itoa(0)
 		status += " "
 	}
 	status += "\n"
 	for i:=0; i<numberOfElevators; i++ {
 		for j:=0; j<numberOfFloors; j++ {
-			status += 0
+			status += strconv.Itoa(0)
 			status += " "
-			status += 0
+			status += strconv.Itoa(0)
 			status += " "
-			status += 0
+			status += strconv.Itoa(0)
 			status += " "
 		}
 		status += "\n"
@@ -87,7 +87,7 @@ func Get() (status string) {
 func Update(status string) {
 	statusFields := strings.Split(status, "\n")
 	
-	field = strings.Split(statusFields[1], " ")
+	field := strings.Split(statusFields[1], " ")
 	for i:=0; i<numberOfElevators; i++ {
 		lastPositions[i],_	= strconv.Atoi(field[i])
 	}

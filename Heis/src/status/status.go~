@@ -56,27 +56,27 @@ func Get() (status string) {
 	
 	// Mask: used for new orders
 	for i:=0; i<numberOfElevators; i++ {
-		status += 0
+		status += strconv.Itoa(0)
 		status += " "
 	}
 	status += "\n"
 	for i:=0; i<numberOfElevators; i++ {
-		status += 0
+		status += strconv.Itoa(0)
 		status += " "
 	}
 	status += "\n"
 	for i:=0; i<numberOfElevators; i++ {
-		status += 0
+		status += strconv.Itoa(0)
 		status += " "
 	}
 	status += "\n"
 	for i:=0; i<numberOfElevators; i++ {
 		for j:=0; j<numberOfFloors; j++ {
-			status += 0
+			status += strconv.Itoa(0)
 			status += " "
-			status += 0
+			status += strconv.Itoa(0)
 			status += " "
-			status += 0
+			status += strconv.Itoa(0)
 			status += " "
 		}
 		status += "\n"
