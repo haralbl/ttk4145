@@ -34,7 +34,7 @@ func ElevatorTimer(elevatorTimerChan chan int, timeoutChan chan int) {
 				timer2 = time.Now()
 				timer2flag = true
 			}
-		case elevatorN = <- elevatorTimeoutChan:
+		case elevatorN = <- timeoutChan:
 			elevatorTimerChan <- elevatorN
 		}
 	}
