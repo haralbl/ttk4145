@@ -5,6 +5,7 @@ import (
 	"strings"
 	"strconv"
 	"network"
+	"math"
 	//"time"
 	//"./Timer"
 )
@@ -19,6 +20,7 @@ var (
 	
 	lastPositions		[numberOfElevators]int
 	inFloor				[numberOfElevators]int
+	directions			[numberOfElevators]int
 	
 	ordersUp			[numberOfElevators][numberOfFloors]int
 	ordersDown			[numberOfElevators][numberOfFloors]int
@@ -43,6 +45,11 @@ func Get() (status string) {
 	}
 	status += "\n"
 	for i:=0; i<numberOfElevators; i++ {
+		status += strconv.Itoa(inFloor[i])
+		status += " "
+	}
+	status += "\n"
+	for i:=0; i<numberOfElevators; i++ {
 		for j:=0; j<numberOfFloors; j++ {
 			status += strconv.Itoa(ordersUp[i][j])
 			status += " "
@@ -55,6 +62,11 @@ func Get() (status string) {
 	}
 	
 	// Mask: used for new orders
+	for i:=0; i<numberOfElevators; i++ {
+		status += strconv.Itoa(0)
+		status += " "
+	}
+	status += "\n"
 	for i:=0; i<numberOfElevators; i++ {
 		status += strconv.Itoa(0)
 		status += " "
@@ -95,7 +107,10 @@ func Update(status string) {
 	for i:=0; i<numberOfElevators; i++ {
 		inFloor[i],_		= strconv.Atoi(field[i])
 	}
-	
+	field = strings.Split(statusFields[2], " ")
+	for i:=0; i<numberOfElevators; i++ {
+		directions[i],_		= strconv.Atoi(field[i])
+	}
 	for i:=0; i<numberOfElevators; i++ {
 		field = strings.Split(statusFields[3+i], " ")
 		for j:=0; j<numberOfFloors; j++ {
@@ -113,8 +128,9 @@ func Initialize() {
 	activeElevators[0] = network.GetLocalIP()
 	
 	for i:=0; i<numberOfElevators; i++ {
-		lastPositions[0]	= 0
-		inFloor[0] 			= 0
+		lastPositions[i]	= 0
+		inFloor[i] 			= 0
+		directions[i]		= 0
 		
 		for j:=0; j<numberOfFloors; j++ {
 			ordersUp[i][j]		= 0
@@ -175,10 +191,62 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 	}
 }
 
+func costFunction(floor int, buttonType int) {
+	var costs[numberOfElevators]int
+	for i:=0; i<numberOfElevators; i++ {
+		costs[i] = 0
+	}
+	
+	for i:=0; i<numberOfElevators; i++ {
+		for j:=0; j<numberOfFloors; j++ {
+			// Check number of orders
+			if 	ordersUp[i][j] == 1 || ordersDown[i][j] == 1 || ordersOut[i][j] == 1 {
+				costs[i] += 10
+			}
+		}
+		// Check if direction towards order
+		if (floor > lastFloor && directions[i] == 1) || (floor < lastFloor && directions[i] == 0) {
+			costs[i] += 5*numberOfFloors
+		}
+		// Check distances
+		costs[i] += 2*Abs(floor - lastFloor)
+		// Check if same direction as order
+		if buttonType != directions[i] {
+			costs[i] += 5*numberOfFloors
+		}
+	}
+	cheapestElevator	:= 0
+	cheapestCost		:= Inf(1)
+	for i:=0; i<numberOfElevators; i++ {
+		if costs[i] < cheapestCost {
+			cheapestElevator := i
+		}
+	}
+	return cheapestElevator
+}
 
-
-
-
+func eventHandler(upButtonChan chan int, downButtonChan chan int, commandButtonChan chan int, floorChan chan int) {
+	var button			int
+	var currentFloor	int
+	var chosenElevator	int
+	for {
+		select {
+		case button = <- upButtonChan: 
+			chosenElevator = costFunction(button, 0)
+			//spawne timer
+			//sende ut på nettverk
+			//
+		case button = <- downButtonChan:
+			costFunction(button, 1)
+		case button = <- commandButtonChan:
+			costFunction(button, 2)
+		case currentFloor = <- floorChan
+		
+		case //ordre fullføres
+		
+		}
+	}
+}
 
 
 

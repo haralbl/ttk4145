@@ -6,6 +6,12 @@ import (
 )
 
 func Send(sendChan chan string){
+	var upButton int
+	var downButton int
+	var commandButton int
+	var currFloor int
+
+
 	BROADCAST_IPv4 := net.IPv4(129, 241, 187, 255)
 	port := 58017
 	socket, err := net.DialUDP("udp4", nil, &net.UDPAddr{
@@ -16,7 +22,7 @@ func Send(sendChan chan string){
 		Printf("error Send 1")
 	}
 	
-	for {
+	for {		
 		data := []byte(<-sendChan)
 	
 		_, err := socket.Write(data)

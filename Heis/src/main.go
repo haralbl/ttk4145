@@ -27,7 +27,6 @@ func main() {
 	doneChan				:= make(chan string)
 	
 	upButtonChan			:= make(chan int)
-	
 	downButtonChan			:= make(chan int)
 	commandButtonChan		:= make(chan int)
 	floorChan				:= make(chan int)
@@ -54,7 +53,7 @@ func main() {
 	go driver.CommandButtonPoller(commandButtonChan)
 	go driver.FloorPoller(floorChan)
 	
-	
+/*	
 		//lese knappetrykk
 	go func(upButtonChan chan int) {
 		for {
@@ -80,7 +79,7 @@ func main() {
 			Println(<- floorChan)
 		}
 	}(floorChan)
-
+*/
 	go func() {
 		for {
 			message = <- receiveChan

@@ -1,0 +1,127 @@
+V "GNAT Lib v4.6"
+M P W=b
+P SS ZX
+R vnnnnnnnnvvnnnnnnnvnnvnvvvvvvnnvnvvnvnnvnnvnvnnnnvnvnnnnnnvnnnnnnnnv2nnnnnv1+nv1+nv1+nn
+
+U exercise8%b		oving8.adb		36d0aaaa NE OO SU IL
+W ada%s			ada.ads			ada.ali
+W ada.calendar.delays%s	a-caldel.adb		a-caldel.ali
+W ada.exceptions%s	a-except.adb		a-except.ali
+W ada.integer_text_io%s	a-inteio.ads		a-inteio.ali
+W ada.numerics%s	a-numeri.ads		a-numeri.ali
+W ada.numerics.float_random%s  a-nuflra.adb	a-nuflra.ali
+W ada.real_time%s	a-reatim.adb		a-reatim.ali
+W ada.tags%s		a-tags.adb		a-tags.ali
+W ada.text_io%s		a-textio.adb		a-textio.ali
+W system%s		system.ads		system.ali
+W system.concat_3%s	s-conca3.adb		s-conca3.ali
+W system.concat_4%s	s-conca4.adb		s-conca4.ali
+W system.exception_table%s  s-exctab.adb	s-exctab.ali
+W system.finalization_implementation%s  s-finimp.adb  s-finimp.ali
+W system.finalization_root%s  s-finroo.adb	s-finroo.ali
+W system.img_int%s	s-imgint.adb		s-imgint.ali
+W system.parameters%s	s-parame.adb		s-parame.ali
+W system.soft_links%s	s-soflin.adb		s-soflin.ali
+W system.standard_library%s  s-stalib.adb	s-stalib.ali
+W system.task_info%s	s-tasinf.adb		s-tasinf.ali
+W system.tasking%s	s-taskin.adb		s-taskin.ali
+W system.tasking.protected_objects%s  s-taprob.adb  s-taprob.ali
+W system.tasking.protected_objects.entries%s  s-tpoben.adb  s-tpoben.ali
+W system.tasking.protected_objects.operations%s  s-tpobop.adb  s-tpobop.ali
+W system.tasking.stages%s  s-tassta.adb		s-tassta.ali
+
+D ada.ads		20070406091342 3ffc8e18
+D a-calend.ads		20090409150019 343c83dd
+D a-caldel.ads		20090409150019 9f20b83d
+D a-except.ads		20090727140100 0c711ac9
+D a-finali.ads		20090409150019 e5e85fa4
+D a-filico.ads		20090409150019 872dc219
+D a-inteio.ads		20070406091342 f64b89a4
+D a-ioexce.ads		20091130110856 8b9de6cd
+D a-numeri.ads		20080324174807 bb51c45a
+D a-nuflra.ads		20100622172941 49c50e0b
+D a-reatim.ads		20090409150019 63f07669
+D a-stream.ads		20090409150019 2ca4ee37
+D a-tags.ads		20101021101406 c7695348
+D a-textio.ads		20091028140912 386df5d4
+D a-tiinio.ads		20090409150019 aa04e5d6
+D a-unccon.ads		20070406091342 f9eb8f06
+D oving8.adb		20150304084827 b133d8d1
+D interfac.ads		20090409150019 f77d8799
+D i-c.ads		20101007125900 809c38c4
+D i-cstrea.ads		20100622165701 1bd72c32
+D system.ads		20140416172229 23e1f70b
+D s-atacco.ads		20090409150019 1dc856ad
+D s-conca3.ads		20090420091404 762a026a
+D s-conca4.ads		20090420091404 025fe3be
+D s-crtl.ads		20100617122610 ac77b159
+D s-exctab.ads		20090417131547 66e51330
+D s-ficobl.ads		20100909103250 443b9d66
+D s-finimp.ads		20090409150019 46853fe8
+D s-finroo.ads		20090409150019 dbb860c9
+D s-imgint.ads		20090409150019 02dbe0c2
+D s-linux.ads		20090730092306 47911ab1
+D s-multip.ads		20101011073009 38ac9f73
+D s-osinte.ads		20101127183452 6e2d2e09
+D s-parame.ads		20091130110856 9c5d83fa
+D s-rannum.ads		20100623054052 5eb33f0a
+D s-secsta.ads		20090707124243 eea35a36
+D s-soflin.ads		20090729085153 9414c974
+D s-stache.ads		20090417130712 596fc1b4
+D s-stausa.ads		20101018101807 bba781f7
+D s-stalib.ads		20101021102512 c4241c00
+D s-stoele.ads		20090417130712 facd7d98
+D s-stoele.adb		20100617152355 afc5dc80
+D s-stratt.ads		20100909123135 aedef97e
+D s-tasinf.ads		20090409150019 21316953
+D s-taspri.ads		20080408071349 af44aca8
+D s-taprop.ads		20090409150019 07f79e46
+D s-taskin.ads		20101021101406 b2eaee08
+D s-taprob.ads		20090409150019 502249e3
+D s-tpoben.ads		20090409150019 e8374469
+D s-tpobop.ads		20090409150019 5f548bb3
+D s-tassta.ads		20101018103456 e88ef99e
+D s-traent.ads		20090417130712 5221ee41
+D s-unstyp.ads		20090409150019 6ae15c76
+D s-wchcon.ads		20090417130712 bfeb2e3d
+X 1 ada.ads
+16K9*Ada 19e8 17|1r6 1r19 1r40 2r5 2r18 2r39
+X 7 a-inteio.ads
+18K13*Integer_Text_IO[15|45] 17|1w23 2r22
+X 9 a-numeri.ads
+16K13*Numerics 32e17 17|1r44 2r43
+X 10 a-nuflra.ads
+41K22*Float_Random 72e30 17|1w53 2r52
+45R9*Generator 17|5r15
+47F12*Uniformly_Distributed{float}
+49V13*Random{47F12}<35|62p13> 17|63s33 65s40
+51U14*Reset<35|91p14> 17|130s9
+X 14 a-textio.ads
+49K13*Text_IO 472e16 17|1w10 2r9
+264U14*Put_Line 17|79s17 83s25 90s33 101s25
+X 17 oving8.adb
+3U11*exercise8 3b11 131l5 131t14
+4X9 Count_Failed 68r31 95r46
+5r9 Gen{10|45R9} 63r40 65r47 130r15
+7W24 Transaction_Manager 7d45 19l13 19e32 21b24 56l13 56t32 73r75 125r27
+7i45 N{positive} 22r76 24r45 40r49
+8Y23 Finished 22b23 22r59 24r28 27r28 35l21 35t29 98s41
+9Y23 Wait_Until_Aborted 37b23 44l21 44t39 88s41
+11U27 Signal_Abort 46b27 49l21 49t33 96s57
+13b17 Finished_Gate_Open{boolean} 22r37 25r33 28r33
+14b17 Aborted{boolean} 37r47 42r33 48r25
+17i17 ParticipantsPassed{integer} 39r25 39r47 40r28 41r33
+59V18 Unreliable_Slow_Add{integer} 59b18 59>39 70l13 70t32 93s48
+59i39 x{integer} 66r32
+60N9 Error_Rate 64r35
+61f9 RandomNumber{float} 63m17 64r20
+73T19 Transaction_Worker 73d39 73d58 74b19 123l13 123t31 126r20 127r20 128r20
+73i39 Initial{integer} 75r34 79r52 83r60 101r61
+75i17 Num{integer} 76r35 89m33 93m41 93r68 101r101 119r33
+76i17 Prev{integer} 89r40 119m25
+77i17 Round_Num{integer} 83r104 84m25 84r38
+125w9 Manager{7W24} 126m43 127m43 128m43
+126t9 Worker_1{73T19}
+127t9 Worker_2{73T19}
+128t9 Worker_3{73T19}
+
