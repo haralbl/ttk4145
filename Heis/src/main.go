@@ -43,6 +43,7 @@ func main() {
 	go timer.DoorTimer(doorTimerChan, doorTimeoutChan)
 	
 	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan)
+	go status.eventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan)
 	
 	//driver.Test()
 	driver.Init()
@@ -83,17 +84,15 @@ func main() {
 	go func() {
 		for {
 			message = <- receiveChan
-			status.Update(message)
-			message = status.Get()
 			println(message)
 		}
 	}()
 	
-	for {
+	/*for {
 		time.Sleep(time.Millisecond * 1000)
 		st := status.Get()
 		Printf("Active: %s\n", st)
-	}
+	}*/
 		
 
 

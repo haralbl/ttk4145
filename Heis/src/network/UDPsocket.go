@@ -5,7 +5,7 @@ import (
 	"net"
 )
 
-func Send(sendChan chan string){
+func Send(sendChan chan string){ ///////////////////////// husk å spam:
 	var upButton int
 	var downButton int
 	var commandButton int

@@ -3,9 +3,10 @@ TODO:
 	/timer assumes 3 elevators
 	checking if oneself is alive...
 	use buffers in any of the channels?
+	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
 
 script:
-	export GOROOT=/usr/lib/go      (trenger mest sanns ikke denne, virket uten!!)
+	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)
 	export GOPATH=$HOME/ttk4145/Heis
 	cd src
 	go build main.go
@@ -14,15 +15,15 @@ script:
 Plan:
 	når knappetrykk registreres // , etasje nåes eller ordre fullføres:
 		regn ut hvilken heis som tar ordren, tempStatus = status || ny ordre
-		Broadcast NyOrdreMelding: tempStatus
-		start kun en AckTimer og send til alle heiser
+		multispam NyOrdreMelding: tempStatus
+		start AckTimer
 		hvis AckTimer timer ut:
 			ta ordre selv
 		status = tempStatus
 	når NyOrdreMelding mottas:
 		legg til ordre på rett sted i status
 		hvis du skal ta ordren:
-			send Ack
+			spam Ack
 
 prosedyre KostFunksjon(kø rutenett) {
 	kostnader liste

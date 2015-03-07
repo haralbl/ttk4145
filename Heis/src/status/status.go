@@ -27,71 +27,64 @@ var (
 	ordersOut			[numberOfElevators][numberOfFloors]int
 )
 
-func Get() (status string) {
-	status = ""
-	for i:=0; i<numberOfElevators; i++ {
-		status += activeElevators[i]
-		status += " "
-	}
-	status += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		status += strconv.Itoa(lastPositions[i])
-		status += " "
-	}
-	status += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		status += strconv.Itoa(inFloor[i])
-		status += " "
-	}
-	status += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		status += strconv.Itoa(inFloor[i])
-		status += " "
-	}
-	status += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		for j:=0; j<numberOfFloors; j++ {
-			status += strconv.Itoa(ordersUp[i][j])
-			status += " "
-			status += strconv.Itoa(ordersDown[i][j])
-			status += " "
-			status += strconv.Itoa(ordersOut[i][j])
-			status += " "
-		}
-		status += "\n"
-	}
+func createMessage(messageType int, buttonType int, elevator int, floor int) (message string) {
+	message = ""
+	message += strconv.Itoa(messageType) + "\n"
 	
-	// Mask: used for new orders
-	for i:=0; i<numberOfElevators; i++ {
-		status += strconv.Itoa(0)
-		status += " "
+	newOrderUp		[numberOfElevators][numberOfFloors]int
+	newOrderDown	[numberOfElevators][numberOfFloors]int
+	newOrderOut		[numberOfElevators][numberOfFloors]int
+	switch buttonType {
+	case 0:
+		newOrderUp[elevator][floor] = 1
+	case 1:
+		newOrderUp[elevator][floor] = 1
+	case 2:
+		newOrderUp[elevator][floor] = 1
 	}
-	status += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		status += strconv.Itoa(0)
-		status += " "
-	}
-	status += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		status += strconv.Itoa(0)
-		status += " "
-	}
-	status += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		status += strconv.Itoa(0)
-		status += " "
-	}
-	status += "\n"
 	for i:=0; i<numberOfElevators; i++ {
 		for j:=0; j<numberOfFloors; j++ {
-			status += strconv.Itoa(0)
-			status += " "
-			status += strconv.Itoa(0)
-			status += " "
-			status += strconv.Itoa(0)
-			status += " "
+			message += strconv.Itoa(newOrderUp[i][j])
+			message += " "
+			message += strconv.Itoa(newOrderDown[i][j])
+			message += " "
+			message += strconv.Itoa(newOrderOut[i][j])
+			message += " "
 		}
-		status += "\n"
+		message += "\n"
+	}
+	message += "\n"
+	
+	for i:=0; i<numberOfElevators; i++ {
+		message += activeElevators[i]
+		message += " "
+	}
+	message += "\n"
+	for i:=0; i<numberOfElevators; i++ {
+		message += strconv.Itoa(lastPositions[i])
+		message += " "
+	}
+	message += "\n"
+	for i:=0; i<numberOfElevators; i++ {
+		message += strconv.Itoa(inFloor[i])
+		message += " "
+	}
+	message += "\n"
+	for i:=0; i<numberOfElevators; i++ {
+		message += strconv.Itoa(inFloor[i])
+		message += " "
+	}
+	message += "\n"
+	for i:=0; i<numberOfElevators; i++ {
+		for j:=0; j<numberOfFloors; j++ {
+			message += strconv.Itoa(ordersUp[i][j])
+			message += " "
+			message += strconv.Itoa(ordersDown[i][j])
+			message += " "
+			message += strconv.Itoa(ordersOut[i][j])
+			message += " "
+		}
+		message += "\n"
 	}
 	return
 }
@@ -225,7 +218,7 @@ func costFunction(floor int, buttonType int) {
 	return cheapestElevator
 }
 
-func eventHandler(upButtonChan chan int, downButtonChan chan int, commandButtonChan chan int, floorChan chan int) {
+func eventHandler(sendChan chan string, upButtonChan chan int, downButtonChan chan int, commandButtonChan chan int, floorChan chan int) {
 	var button			int
 	var currentFloor	int
 	var chosenElevator	int
@@ -234,15 +227,17 @@ func eventHandler(upButtonChan chan int, downButtonChan chan int, commandButtonC
 		case button = <- upButtonChan: 
 			chosenElevator = costFunction(button, 0)
 			//spawne timer
-			//sende ut på nettverk
-			//
+			sendChan <- createMessage(0, 0, chosenElevator, button)
 		case button = <- downButtonChan:
-			costFunction(button, 1)
+			chosenElevator = costFunction(button, 1)
+			//spawne timer
+			sendChan <- createMessage(0, 1, chosenElevator, button)
 		case button = <- commandButtonChan:
-			costFunction(button, 2)
-		case currentFloor = <- floorChan
-		
-		case //ordre fullføres
+			chosenElevator = costFunction(button, 2)
+			//spawne timer
+			sendChan <- createMessage(0, 2, chosenElevator, button)
+		//case currentFloor = <- floorChan:
+		//case //ordre fullføres
 		
 		}
 	}
