@@ -31,9 +31,9 @@ func createMessage(messageType int, buttonType int, elevator int, floor int) (me
 	message = ""
 	message += strconv.Itoa(messageType) + "\n"
 	
-	newOrderUp		[numberOfElevators][numberOfFloors]int
-	newOrderDown	[numberOfElevators][numberOfFloors]int
-	newOrderOut		[numberOfElevators][numberOfFloors]int
+	var newOrderUp		[numberOfElevators][numberOfFloors]int
+	var newOrderDown	[numberOfElevators][numberOfFloors]int
+	var newOrderOut		[numberOfElevators][numberOfFloors]int
 	switch buttonType {
 	case 0:
 		newOrderUp[elevator][floor] = 1
@@ -184,7 +184,7 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 	}
 }
 
-func costFunction(floor int, buttonType int) {
+func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	var costs[numberOfElevators]int
 	for i:=0; i<numberOfElevators; i++ {
 		costs[i] = 0
@@ -198,33 +198,33 @@ func costFunction(floor int, buttonType int) {
 			}
 		}
 		// Check if direction towards order
-		if (floor > lastFloor && directions[i] == 1) || (floor < lastFloor && directions[i] == 0) {
+		if (floor > lastPositions[i] && directions[i] == 1) || (floor < lastPositions[i] && directions[i] == 0) {
 			costs[i] += 5*numberOfFloors
 		}
 		// Check distances
-		costs[i] += 2*Abs(floor - lastFloor)
+		costs[i] += int(2*math.Abs(float64(floor) - float64(lastPositions[i])))
 		// Check if same direction as order
 		if buttonType != directions[i] {
 			costs[i] += 5*numberOfFloors
 		}
 	}
-	cheapestElevator	:= 0
-	cheapestCost		:= Inf(1)
+	cheapestElevator	= 0
+	cheapestCost		:= math.Inf(1)
 	for i:=0; i<numberOfElevators; i++ {
-		if costs[i] < cheapestCost {
-			cheapestElevator := i
+		if costs[i] < int(cheapestCost) {
+			cheapestElevator = i
 		}
 	}
-	return cheapestElevator
+	return
 }
 
-func eventHandler(sendChan chan string, upButtonChan chan int, downButtonChan chan int, commandButtonChan chan int, floorChan chan int) {
+func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan chan int, commandButtonChan chan int, floorChan chan int) {
 	var button			int
-	var currentFloor	int
+	//var currentFloor	int
 	var chosenElevator	int
 	for {
 		select {
-		case button = <- upButtonChan: 
+		case button = <- upButtonChan:
 			chosenElevator = costFunction(button, 0)
 			//spawne timer
 			sendChan <- createMessage(0, 0, chosenElevator, button)

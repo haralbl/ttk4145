@@ -1,6 +1,6 @@
 package timer
 
-import (
+/*import (
 	."fmt"
 	"time"
 )
@@ -17,4 +17,4 @@ var (
 
 func ackTimer() {
 	h
-}
+}*/

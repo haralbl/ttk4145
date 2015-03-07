@@ -4,7 +4,7 @@ import (
 	."fmt"
 	"status"
 	"network"
-	"time"
+	//"time"
 	"timer"
 	"driver"
 	//"strings"
@@ -43,7 +43,7 @@ func main() {
 	go timer.DoorTimer(doorTimerChan, doorTimeoutChan)
 	
 	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan)
-	go status.eventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan)
+	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan)
 	
 	//driver.Test()
 	driver.Init()

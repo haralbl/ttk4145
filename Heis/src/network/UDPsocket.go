@@ -6,11 +6,6 @@ import (
 )
 
 func Send(sendChan chan string){ ///////////////////////// husk å spam:
-	var upButton int
-	var downButton int
-	var commandButton int
-	var currFloor int
-
 
 	BROADCAST_IPv4 := net.IPv4(129, 241, 187, 255)
 	port := 58017
@@ -22,7 +17,7 @@ func Send(sendChan chan string){ ///////////////////////// husk å spam:
 		Printf("error Send 1")
 	}
 	
-	for {		
+	for {
 		data := []byte(<-sendChan)
 	
 		_, err := socket.Write(data)
