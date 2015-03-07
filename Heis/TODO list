@@ -1,4 +1,6 @@
 TODO:
+	slå sammen buttonChans?
+	del opp handleMessage i /status
 	Calling GetLocalIP() more than once
 	/timer assumes 3 elevators
 	checking if oneself is alive...

@@ -5,7 +5,11 @@ import (
 	"net"
 )
 
-func Send(sendChan chan string){ ///////////////////////// husk å spam:
+const (
+	numberOfRetries int = 1 ////////////////////////////// ØK TIL 5
+)
+
+func Send(sendChan chan string){
 
 	BROADCAST_IPv4 := net.IPv4(129, 241, 187, 255)
 	port := 58017
@@ -19,11 +23,11 @@ func Send(sendChan chan string){ ///////////////////////// husk å spam:
 	
 	for {
 		data := []byte(<-sendChan)
-	
-		_, err := socket.Write(data)
-		Printf("sending\n")
-		if err != nil {
-			Printf("error Send 2")
+		for i:=0; i<numberOfRetries; i++ {
+			_, err := socket.Write(data)
+			if err != nil {
+				Printf("error Send 2")
+			}
 		}
 	}
 }

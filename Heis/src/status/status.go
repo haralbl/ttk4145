@@ -1,7 +1,7 @@
 package status
 
 import (
-	//."fmt"
+	."fmt"
 	"strings"
 	"strconv"
 	"network"
@@ -27,9 +27,9 @@ var (
 	ordersOut			[numberOfElevators][numberOfFloors]int
 )
 
-func createMessage(messageType int, buttonType int, elevator int, floor int) (message string) {
+func wrapMessage(messageType string, buttonType int, elevator int, floor int) (message string) {
 	message = ""
-	message += strconv.Itoa(messageType) + "\n"
+	message += messageType + "\n"
 	
 	var newOrderUp		[numberOfElevators][numberOfFloors]int
 	var newOrderDown	[numberOfElevators][numberOfFloors]int
@@ -53,7 +53,6 @@ func createMessage(messageType int, buttonType int, elevator int, floor int) (me
 		}
 		message += "\n"
 	}
-	message += "\n"
 	
 	for i:=0; i<numberOfElevators; i++ {
 		message += activeElevators[i]
@@ -89,28 +88,82 @@ func createMessage(messageType int, buttonType int, elevator int, floor int) (me
 	return
 }
 
-func Update(status string) {
-	statusFields := strings.Split(status, "\n")
+func handleMessage(message string, sendChan chan string, resetAckChan chan string) {
+	statusFields := strings.Split(message, "\n")
 	
-	field := strings.Split(statusFields[1], " ")
+	// update status
+	temp := 0
+	field := strings.Split(statusFields[5], " ")
 	for i:=0; i<numberOfElevators; i++ {
-		lastPositions[i],_	= strconv.Atoi(field[i])
+		temp,_	= strconv.Atoi(field[i])
+		lastPositions[i] = lastPositions[i] | temp
 	}
-	field = strings.Split(statusFields[2], " ")
+	field = strings.Split(statusFields[6], " ")
 	for i:=0; i<numberOfElevators; i++ {
-		inFloor[i],_		= strconv.Atoi(field[i])
+		temp,_		= strconv.Atoi(field[i])
+		inFloor[i] = inFloor[i] | temp
 	}
-	field = strings.Split(statusFields[2], " ")
+	field = strings.Split(statusFields[7], " ")
 	for i:=0; i<numberOfElevators; i++ {
-		directions[i],_		= strconv.Atoi(field[i])
+		temp,_		= strconv.Atoi(field[i])
+		directions[i] = directions[i] | temp
 	}
 	for i:=0; i<numberOfElevators; i++ {
-		field = strings.Split(statusFields[3+i], " ")
+		field = strings.Split(statusFields[8+i], " ")
 		for j:=0; j<numberOfFloors; j++ {
-			ordersUp[i][j],_	= strconv.Atoi(field[3*j+0])
-			ordersDown[i][j],_	= strconv.Atoi(field[3*j+1])
-			ordersOut[i][j],_	= strconv.Atoi(field[3*j+2])
+			temp,_	= strconv.Atoi(field[3*j+0])
+			ordersUp[i][j] = ordersUp[i][j] | temp
+			temp,_	= strconv.Atoi(field[3*j+1])
+			ordersDown[i][j] = ordersDown[i][j] | temp
+			temp,_	= strconv.Atoi(field[3*j+2])
+			ordersOut[i][j] = ordersOut[i][j] | temp
 		}
+	}
+	
+	// add new info to status
+	messageType := statusFields[0]
+	var elevator	int
+	var floor		int
+	var buttonType	int
+	var order		int
+	
+	for i:=0; i<numberOfElevators; i++ {
+		field = strings.Split(statusFields[1+i], " ")
+		for j:=0; j<numberOfFloors; j++ {
+			order,_ = strconv.Atoi(field[3*j+0])
+			if order == 1 {
+				elevator = i
+				floor = j
+				buttonType = 0
+			}
+			order,_ = strconv.Atoi(field[3*j+1])
+			if order == 1 {
+				elevator = i
+				floor = j
+				buttonType = 1
+			}
+			order,_ = strconv.Atoi(field[3*j+2])
+			if order == 1 {
+				elevator = i
+				floor = j
+				buttonType = 2
+			}
+		}
+	}
+	//sjekk opp mot IP liste i message
+	//oppdater status
+	
+	switch (messageType) {
+	case "ack":
+		Println("received ack")
+		resetAckChan <- "reset"
+	case "newOrder":
+		Println("received newOrder")
+		sendChan <- wrapMessage("ack", buttonType, elevator, floor)      //correct ack
+	case "floorReached":
+		Println("received floorReached")
+	case "orderCompleted":
+		Println("received orderCompleted")
 	}
 }
 
@@ -218,27 +271,38 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	return
 }
 
-func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan chan int, commandButtonChan chan int, floorChan chan int) {
+func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan chan int,
+					commandButtonChan chan int, floorChan chan int, ackTimerChan chan string,
+					receiveChan chan string, resetAckChan chan string, ackCheckChan chan string,
+					ackTimeoutChan chan string) {
+	var ack				string
 	var button			int
 	//var currentFloor	int
 	var chosenElevator	int
+	var message			string
 	for {
 		select {
 		case button = <- upButtonChan:
 			chosenElevator = costFunction(button, 0)
-			//spawne timer
-			sendChan <- createMessage(0, 0, chosenElevator, button)
+			ackTimerChan <- "acktimer"
+			sendChan <- wrapMessage("newOrder", 0, chosenElevator, button)
 		case button = <- downButtonChan:
 			chosenElevator = costFunction(button, 1)
-			//spawne timer
-			sendChan <- createMessage(0, 1, chosenElevator, button)
+			ackTimerChan <- "acktimer"
+			sendChan <- wrapMessage("newOrder", 1, chosenElevator, button)
 		case button = <- commandButtonChan:
 			chosenElevator = costFunction(button, 2)
-			//spawne timer
-			sendChan <- createMessage(0, 2, chosenElevator, button)
+			ackTimerChan <- "acktimer"
+			sendChan <- wrapMessage("newOrder", 2, chosenElevator, button)
+		case ack = <- ackTimeoutChan:
+			ack = ack ////////////////// fjærn!!!!
+			// ta ordre selv
+		case message = <- receiveChan:
+			handleMessage(message, sendChan, resetAckChan)
 		//case currentFloor = <- floorChan:
 		//case //ordre fullføres
-		
+		//case ack mottatt
+			
 		}
 	}
 }

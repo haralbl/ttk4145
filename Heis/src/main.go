@@ -23,6 +23,10 @@ func main() {
 	elevatorTimeoutChan		:= make(chan int)
 	doorTimerChan			:= make(chan int)
 	doorTimeoutChan			:= make(chan int)
+	ackTimerChan			:= make(chan string)
+	ackCheckChan			:= make(chan string)
+	ackTimeoutChan			:= make(chan string)
+	resetAckChan			:= make(chan string)
 	
 	doneChan				:= make(chan string)
 	
@@ -41,9 +45,11 @@ func main() {
 	
 	go timer.ElevatorTimer(elevatorTimerChan, elevatorTimeoutChan)
 	go timer.DoorTimer(doorTimerChan, doorTimeoutChan)
+	go timer.AckTimer(ackTimerChan, ackTimeoutChan, resetAckChan, ackCheckChan)
 	
 	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan)
-	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan)
+	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan,
+							ackTimerChan, receiveChan, resetAckChan, ackCheckChan, ackTimeoutChan)
 	
 	//driver.Test()
 	driver.Init()
@@ -81,12 +87,7 @@ func main() {
 		}
 	}(floorChan)
 */
-	go func() {
-		for {
-			message = <- receiveChan
-			println(message)
-		}
-	}()
+	
 	
 	/*for {
 		time.Sleep(time.Millisecond * 1000)
