@@ -18,8 +18,11 @@ func floorReached() {
 	// set floor lights
 	switch state {
 	case IDLE:
+		// do nothing? (shouldnt happen)
 	case DOOR_OPEN:
+		// do nothing? (shouldnt happen)
 	case MOVING:
+		// maybe stop
 	}
 }
 
@@ -64,8 +67,6 @@ func outOrder() {
 		// update status without sending? (takes this oneself anyways)
 	}
 }
-
-
 
 
 

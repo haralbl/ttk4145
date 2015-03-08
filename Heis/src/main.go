@@ -21,7 +21,7 @@ func main() {
 	receiveAliveMessageChan := make(chan string)
 	elevatorTimerChan		:= make(chan int)
 	elevatorTimeoutChan		:= make(chan int)
-	doorTimerChan			:= make(chan int)
+	doorTimerChan			:= make(chan string)
 	doorTimeoutChan			:= make(chan int)
 	ackTimerChan			:= make(chan string)
 	ackCheckChan			:= make(chan string)

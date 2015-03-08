@@ -62,7 +62,7 @@ func Init() int{
 	
     // Clear stop lamp, door open lamp, and set floor indicator to ground floor.
     set_stop_lamp(0)
-    set_door_open_lamp(0)
+    Set_door_open_lamp(0)
     set_floor_indicator(0)
 	
     // Return success.
@@ -148,7 +148,7 @@ func FloorPoller(floorChan chan int) {
 	} 
 }
 
-func set_motor_direction(dir direction) {
+func Set_motor_direction(dir direction) {
     if dir == 0 {
         io_write_analog(MOTOR, 0)
     } else if dir > 0 {
@@ -160,7 +160,7 @@ func set_motor_direction(dir direction) {
     }
 }
 
-func set_door_open_lamp(value int) {
+func Set_door_open_lamp(value int) {
     if value != 0 {
         io_set_bit(LIGHT_DOOR_OPEN)
     } else {

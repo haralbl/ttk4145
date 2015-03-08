@@ -1,7 +1,7 @@
 package timer
 
 import (
-	//."fmt"
+	."fmt"
 	"time"
 )
 
@@ -14,15 +14,31 @@ var (
 	doorTimerFlag bool = false
 )
 
-func DoorTimer(doorTimerChan chan int, doorTimeoutChan chan int) {
+func doorTimer(doorTimerChan chan string, doorTimeoutChan chan int) {
 	go checkTimer(doorTimeoutChan)
-}
-
-func checkDoorTimer(doorTimeoutChan chan int) {
 	for {
-		/*if (int64(time.Since(timer0)) > int64(timeUntilTimeout)) && (timer0flag == true) {
-			timer0flag = false
-			Println("								doortimer timeout")
-		}*/
+		select {
+		case <- doorTimerChan:
+			doorTimer = time.Now()
+			doorTimerFlag = true
+		case <- doorTimeoutChan:
+			doorTimerChan <- "doorTimeout"
+		}
 	}
 }
+
+func checkTimer(doorTimeoutChan chan int) {
+	for {
+		if (int64(time.Since(timer0)) > int64(timeUntilTimeout)) && (timer0flag == true) {
+			timer0flag = false
+			elevatorTimeoutChan <- 0
+			Println("								timer 0 timeout")
+		}
+	}
+}
+
+
+
+
+
+

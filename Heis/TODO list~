@@ -1,26 +1,43 @@
 TODO:
+	slå sammen buttonChans?
+	del opp handleMessage i /status
 	Calling GetLocalIP() more than once
 	/timer assumes 3 elevators
 	checking if oneself is alive...
 	use buffers in any of the channels?
-	
-	func Delegate() regn ut hvilken heis som tar ordre
+	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
 
 script:
-	export GOROOT=/usr/lib/go      (trenger mest sanns ikke denne, virket uten!!)
+	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)
 	export GOPATH=$HOME/ttk4145/Heis
 	cd src
 	go build main.go
 	go run main.go
 	
 Plan:
-	når knappetrykk registreres, etasje nåes eller ordre fullføres:
-		Broadcast NyOrdreMelding: status (med timestamp) + maske (markert ny ordre)
+	når knappetrykk registreres // , etasje nåes eller ordre fullføres:
+		regn ut hvilken heis som tar ordren, tempStatus = status || ny ordre
+		multispam NyOrdreMelding: tempStatus
 		start AckTimer
 		hvis AckTimer timer ut:
 			ta ordre selv
+		status = tempStatus
 	når NyOrdreMelding mottas:
-		regn ut hvilken heis som tar ordren (denne funksjonen legger også til ordre i korrekt kø og setter heisen i gang?)
+		legg til ordre på rett sted i status
 		hvis du skal ta ordren:
-			send Ack
+			spam Ack
+
+prosedyre KostFunksjon(kø rutenett) {
+	kostnader liste
+	
+	Gjør		øk kostnader
+	Hvis		stor avstand
+	HvisHeller	du er i riktig retning
+	HvisHeller	du har færrest ordre
+	Ellers		lavest IP
+}
+
+
+
+
 
