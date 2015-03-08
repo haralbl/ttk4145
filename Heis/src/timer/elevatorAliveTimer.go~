@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	timeUntilTimeout = 2000*time.Millisecond
+	timeUntilTimeout = 300*time.Millisecond
 )
 var (
 	timer0		time.Time
@@ -57,6 +57,7 @@ func checkTimer(elevatorTimeoutChan chan int) {
 			elevatorTimeoutChan <- 2
 			Println("								timer 2 timeout")
 		}
+		time.sleep(10*time.Millisecond)
 	}
 }
 

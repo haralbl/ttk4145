@@ -57,6 +57,7 @@ func checkTimer(elevatorTimeoutChan chan int) {
 			elevatorTimeoutChan <- 2
 			Println("								timer 2 timeout")
 		}
+		time.Sleep(10*time.Millisecond)
 	}
 }
 

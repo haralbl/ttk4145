@@ -169,12 +169,12 @@ func unwrapMessage(message string) (elevator int, floor int, buttonType int, ord
 	return
 }
 
-func handleMessage(sendChan chan string, resetAckChan chan string, elevator int, floor int, buttonType int, order int, messageType string){
+func handleMessage(sendChan chan string, elevator int, floor int, buttonType int, order int, messageType string){
 	switch (messageType) {
 	case "ack":
 		Println("received ack")
-		resetAckChan <- "reset"
 		
+		//reset ack timer?
 		// legge til ordre du ikke selv skal ta
 		
 	case "newOrder":
@@ -323,8 +323,7 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 
 func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan chan int,
 					commandButtonChan chan int, floorChan chan int, ackTimerChan chan string,
-					receiveChan chan string, resetAckChan chan string, ackCheckChan chan string,
-					ackTimeoutChan chan string, doorTimerChan chan int) {
+					receiveChan chan string, ackTimeoutChan chan string, doorTimerChan chan string) {
 	var ack				string
 	var button			int
 	//var currentFloor	int
@@ -333,30 +332,33 @@ func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan ch
 	for {
 		select {
 		case button = <- upButtonChan:
+			Printf("up button pressed")
 			chosenElevator = costFunction(button, 0)
-			ackTimerChan <- "acktimer"
+			//ackTimerChan <- "acktimer" //funkar inte
+			Printf("up button pressed")
 			sendChan <- wrapMessage("newOrder", 0, chosenElevator, button)
 		case button = <- downButtonChan:
 			chosenElevator = costFunction(button, 1)
-			ackTimerChan <- "acktimer"
+			//ackTimerChan <- "acktimer"//funkar inte
 			sendChan <- wrapMessage("newOrder", 1, chosenElevator, button)
 		case button = <- commandButtonChan:
 			chosenElevator = costFunction(button, 2)
-			ackTimerChan <- "acktimer"
+			//ackTimerChan <- "acktimer"//funkar inte
 			sendChan <- wrapMessage("newOrder", 2, chosenElevator, button)
 		case ack = <- ackTimeoutChan:
 			ack = ack ////////////////// fjærn!!!!
 			// ta ordre selv
 		case message = <- receiveChan:
 			elevator, floor, buttonType, order, messageType := unwrapMessage(message)
-			handleMessage(sendChan, resetAckChan, elevator, floor, buttonType, order, messageType)
+			handleMessage(sendChan, elevator, floor, buttonType, order, messageType)
 		case previousFloors[0] = <- floorChan:
 			sendChan <- wrapMessage("floorReached", 0, 0, previousFloors[0])
-			event_floorReached()
+			event_floorReached(doorTimerChan)
 		//case ordre fullføres
 			//nextDirection()
 		//case ack mottatt
 		case <- doorTimerChan:
+			Printf("door timer finished\n")
 			event_doorTimerOut()
 		}
 	}
@@ -368,14 +370,17 @@ func event_newOrder() {
 		//set button lamp
 		if nextDirection() == STOP {  
 			state = IDLE;
+			Print("state = IDLE\n")
 		} else if nextDirection() == UP {
 			driver.Set_motor_direction(UP);
 			directions[0] = UP;
  			state = MOVING;
+ 			Print("state = MOVING\n")
 		} else if nextDirection() == DOWN {
 			driver.Set_motor_direction(DOWN);
 			directions[0] = DOWN;
 			state = MOVING;
+			Print("state = MOVING\n")
 		} else {
 			Printf("ERROR, event_newOrder: nextDirection returns invalid value")
 		}
@@ -386,7 +391,7 @@ func event_newOrder() {
 	}
 }
 
-func event_floorReached() {
+func event_floorReached(doorTimerChan chan string) {
 	// set floor lights
 	switch state {
 	case IDLE:
@@ -397,8 +402,9 @@ func event_floorReached() {
 		if shouldStop() == 1 {
 			driver.Set_motor_direction(STOP)
 			driver.Set_door_open_lamp(1)
-			//starte door timer
+			doorTimerChan <- "start"
 			state = DOOR_OPEN
+			Print("state = DOOR_OPEN\n")
 		}
 	}
 }
@@ -411,14 +417,17 @@ func event_doorTimerOut() {
 		driver.Set_door_open_lamp(0)
 		if nextDirection() == STOP {  
 			state = IDLE;
+			Print("state = IDLE\n")
 		} else if nextDirection() == UP {
 			driver.Set_motor_direction(UP);
 			directions[0] = UP;
  			state = MOVING;
+ 			Print("state = MOVING\n")
 		} else if nextDirection() == DOWN {
 			driver.Set_motor_direction(DOWN);
 			directions[0] = DOWN;
 			state = MOVING;
+			Print("state = MOVING\n")
 		} else {
 			Printf("ERROR, event_doorTimerOut: nextDirection returns invalid value")
 		}
