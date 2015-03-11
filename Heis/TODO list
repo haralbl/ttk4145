@@ -9,6 +9,8 @@ TODO:
 	bruke kun channels til /driver?
 	
 	spamme helt til acktimeout, ikke bare spamme 5 ganger
+	
+	test updateAwokenElevator
 
 script:
 	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)

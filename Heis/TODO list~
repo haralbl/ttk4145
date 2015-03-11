@@ -7,6 +7,12 @@ TODO:
 	use buffers in any of the channels?
 	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
 	bruke kun channels til /driver?
+	
+	spamme helt til acktimeout, ikke bare spamme 5 ganger
+	
+	send ut statusupdate når en annen heis dukker opp
+	slik at den heisen kan ta seg av gamle utordre
+	uten å vente på at noe annet skal skje og trigge statusupdate
 
 script:
 	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)

@@ -169,7 +169,7 @@ func unwrapMessage(message string) (elevator int, floor int, buttonType int, ord
 	return
 }
 
-func handleMessage(sendChan chan string, elevator int, floor int, buttonType int, order int, messageType string){
+func handleMessage(sendChan chan string, doorTimerChan chan string, elevator int, floor int, buttonType int, order int, messageType string){
 	switch (messageType) {
 	case "ack":
 		Println("received ack")
@@ -191,19 +191,19 @@ func handleMessage(sendChan chan string, elevator int, floor int, buttonType int
 				if ordersUp[elevator][floor] == 0 {
 					sendChan <- wrapMessage("ack", buttonType, elevator, floor)
 					ordersUp[elevator][floor] = 1
-					event_newOrder()
+					event_newOrder(sendChan, doorTimerChan)
 				}
 			case 1:
 				if ordersDown[elevator][floor] == 0 {
 					sendChan <- wrapMessage("ack", buttonType, elevator, floor)
 					ordersDown[elevator][floor] = 1
-					event_newOrder()
+					event_newOrder(sendChan, doorTimerChan)
 				}
 			case 2:
 				if ordersDown[elevator][floor] == 0 {
 					sendChan <- wrapMessage("ack", buttonType, elevator, floor)
 					ordersOut[elevator][floor] = 1
-					event_newOrder()
+					event_newOrder(sendChan, doorTimerChan)
 				}
 			}
 		}
@@ -221,6 +221,8 @@ func handleMessage(sendChan chan string, elevator int, floor int, buttonType int
 		driver.Set_button_lamp(1, floor, 0)
 		driver.Set_button_lamp(2, floor, 0)
 	}
+	case "updateAwokenElevator":
+		Println("received updateAwokenElevator")
 }
 
 func Initialize(initChan chan string, floorChan chan int) {
@@ -288,6 +290,7 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 			elevatorN = isElevatorInList(elevatorIP)
 			if elevatorN == -1 {
 				elevatorN = addElevator(elevatorIP)
+				sendChan <- wrapMessage("updateAwokenElevator", 0, 0, 0)
 			}
 			elevatorTimerChan <- elevatorN
 		case elevatorN = <- elevatorTimerChan:
@@ -361,7 +364,7 @@ func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan ch
 			
 		case message = <- receiveChan:
 			elevator, floor, buttonType, order, messageType := unwrapMessage(message)
-			handleMessage(sendChan, elevator, floor, buttonType, order, messageType)
+			handleMessage(sendChan, doorTimerChan, elevator, floor, buttonType, order, messageType)
 			
 		case previousFloors[0] = <- floorChan:
 			stateOfShouldStop := shouldStop()
@@ -379,7 +382,7 @@ func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan ch
 	}
 }
 	
-func event_newOrder() {
+func event_newOrder(sendChan chan string, doorTimerChan chan string) {
 	switch (state) {
 	case IDLE:
 		//set button lamp
