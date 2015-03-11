@@ -220,9 +220,9 @@ func handleMessage(sendChan chan string, doorTimerChan chan string, elevator int
 		driver.Set_button_lamp(0, floor, 0)
 		driver.Set_button_lamp(1, floor, 0)
 		driver.Set_button_lamp(2, floor, 0)
-	}
 	case "updateAwokenElevator":
 		Println("received updateAwokenElevator")
+	}
 }
 
 func Initialize(initChan chan string, floorChan chan int) {
@@ -280,7 +280,7 @@ func removeElevator(elevatorN int) {
 	activeElevators[elevatorN] = "empty"
 }
 
-func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan chan int) {
+func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan chan int, sendChan chan string) {
 	var elevatorIP	string
 	var elevatorN	int
 	for {

@@ -57,7 +57,7 @@ func main() {
 	go timer.DoorTimer(doorTimerChan, doorTimeoutChan)
 	go timer.AckTimer(ackTimerChan, ackTimeoutChan)
 	
-	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan)
+	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan, sendChan)
 	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan,
 							ackTimerChan, receiveChan, ackTimeoutChan,
 							doorTimerChan)
