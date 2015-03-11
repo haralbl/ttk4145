@@ -8,6 +8,7 @@ import (
 	"timer"
 	"driver"
 	//"strings"
+	"os"
 )
 
 var (
@@ -27,14 +28,25 @@ func main() {
 	ackTimeoutChan			:= make(chan string)
 	
 	doneChan				:= make(chan string)
+	initChan				:= make(chan string)
 	
 	upButtonChan			:= make(chan int)
 	downButtonChan			:= make(chan int)
 	commandButtonChan		:= make(chan int)
 	floorChan				:= make(chan int)
 	
-	status.Initialize()
+	if driver.Init() != 1 {
+		Printf("driver.Init failed")
+		os.Exit(1)
+	}
 	
+	go driver.UpButtonPoller(upButtonChan)
+	go driver.DownButtonPoller(downButtonChan)
+	go driver.CommandButtonPoller(commandButtonChan)
+	go driver.FloorPoller(floorChan)
+	
+	go status.Initialize(initChan, floorChan)
+	Println(<-initChan)
 	
 	go network.Send(sendChan)
 	go network.Receive(receiveChan)
@@ -50,14 +62,7 @@ func main() {
 							ackTimerChan, receiveChan, ackTimeoutChan,
 							doorTimerChan)
 	
-	//driver.Test()
-	driver.Init()
-	//poller lagt til
 	
-	go driver.UpButtonPoller(upButtonChan)
-	go driver.DownButtonPoller(downButtonChan)
-	go driver.CommandButtonPoller(commandButtonChan)
-	go driver.FloorPoller(floorChan)
 	
 /*	
 		//lese knappetrykk

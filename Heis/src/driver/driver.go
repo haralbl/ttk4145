@@ -52,18 +52,18 @@ func Init() int{
 	
     for i := 0; i < NFloors; i++ {
         if i != 0 {
-            set_button_lamp(BUTTON_CALL_DOWN, i, 0)
+            Set_button_lamp(BUTTON_CALL_DOWN, i, 0)
         }
         if i != NFloors - 1 {
-            set_button_lamp(BUTTON_CALL_UP, i, 0)
+            Set_button_lamp(BUTTON_CALL_UP, i, 0)
         }
-        set_button_lamp(BUTTON_COMMAND, i, 0)
+        Set_button_lamp(BUTTON_COMMAND, i, 0)
     }
 	
     // Clear stop lamp, door open lamp, and set floor indicator to ground floor.
     set_stop_lamp(0)
     Set_door_open_lamp(0)
-    set_floor_indicator(0)
+    Set_floor_indicator(0)
 	
     // Return success.
     return 1
@@ -198,7 +198,7 @@ func Get_floor_sensor_signal() int{
     }
 }
 
-func set_floor_indicator(floor int) {
+func Set_floor_indicator(floor int) {
     if floor < 0 || floor >= NFloors {
         os.Exit(1)
     }
@@ -234,7 +234,7 @@ func get_button_signal(button int,floor int) int{
     }
 }
 
-func set_button_lamp(button int, floor int, value int) {
+func Set_button_lamp(button int, floor int, value int) {
     if floor < 0 || floor >= NFloors {
     	//os.Exit(1)
     	fmt.Printf("setting lamp in nonvalid floor")

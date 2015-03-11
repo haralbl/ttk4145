@@ -49,9 +49,9 @@ func wrapMessage(messageType string, buttonType int, elevator int, floor int) (m
 	case 0:
 		newOrderUp[elevator][floor] = 1
 	case 1:
-		newOrderUp[elevator][floor] = 1
+		newOrderDown[elevator][floor] = 1
 	case 2:
-		newOrderUp[elevator][floor] = 1
+		newOrderOut[elevator][floor] = 1
 	}
 	for i:=0; i<numberOfElevators; i++ {
 		for j:=0; j<numberOfFloors; j++ {
@@ -105,19 +105,19 @@ func unwrapMessage(message string) (elevator int, floor int, buttonType int, ord
 	// update status
 	temp := 0
 	field := strings.Split(statusFields[5], " ")
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=1; i<numberOfElevators; i++ {
 		temp,_	= strconv.Atoi(field[i])
-		previousFloors[i] = previousFloors[i] | temp
+		previousFloors[i] = temp
 	}
 	field = strings.Split(statusFields[6], " ")
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=1; i<numberOfElevators; i++ {
 		temp,_		= strconv.Atoi(field[i])
-		inFloor[i] = inFloor[i] | temp
+		inFloor[i] = temp
 	}
 	field = strings.Split(statusFields[7], " ")
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=1; i<numberOfElevators; i++ {
 		temp,_		= strconv.Atoi(field[i])
-		directions[i] = directions[i] | temp
+		directions[i] = temp
 	}
 	for i:=0; i<numberOfElevators; i++ {
 		field = strings.Split(statusFields[8+i], " ")
@@ -176,13 +176,16 @@ func handleMessage(sendChan chan string, elevator int, floor int, buttonType int
 		
 		//reset ack timer?
 		// legge til ordre du ikke selv skal ta
+		//sette knappelys hvis ikke du tar ordren selv
 		
 	case "newOrder":
 		if elevator == 0{
 			Println("received new order to handle myself")
+			
+			driver.Set_button_lamp(buttonType, floor, 1)
+		
 			sendChan <- wrapMessage("ack", buttonType, elevator, floor)
 		
-			// oppdater status	
 			switch (buttonType) {
 			case 0:
 				if ordersUp[elevator][floor] == 0 {
@@ -199,7 +202,7 @@ func handleMessage(sendChan chan string, elevator int, floor int, buttonType int
 			case 2:
 				if ordersDown[elevator][floor] == 0 {
 					sendChan <- wrapMessage("ack", buttonType, elevator, floor)
-					ordersDown[elevator][floor] = 1
+					ordersOut[elevator][floor] = 1
 					event_newOrder()
 				}
 			}
@@ -210,24 +213,35 @@ func handleMessage(sendChan chan string, elevator int, floor int, buttonType int
 		
 	case "orderCompleted":
 		Println("received orderCompleted")
-		// oppdater status
-		switch (buttonType) {
-		case 0:
-			ordersUp[elevator][floor] = 0
-		case 1:
-			ordersDown[elevator][floor] = 0
-		case 2:
-			ordersOut[elevator][floor] = 0
-		}
+		
+		ordersUp[elevator][floor]		= 0
+		ordersDown[elevator][floor] 	= 0
+		ordersOut[elevator][floor]		= 0
+		driver.Set_button_lamp(0, floor, 0)
+		driver.Set_button_lamp(1, floor, 0)
+		driver.Set_button_lamp(2, floor, 0)
 	}
 }
 
-func Initialize() {
+func Initialize(initChan chan string, floorChan chan int) {
 	for i:=0; i<numberOfElevators; i++ {
 		activeElevators[i] = "empty"
 	} 
 	activeElevators[0] = network.GetLocalIP()
 	
+	driver.Set_motor_direction(DOWN)
+	for {
+		select {
+		case previousFloors[0] = <- floorChan:
+			driver.Set_floor_indicator(previousFloors[0])
+			if previousFloors[0] == 0 {
+				driver.Set_motor_direction(STOP)
+				initChan <- "Finished init"
+				return
+				Println("init goFunc not exited")
+			}
+		}
+	}
 	state = IDLE
 }
 
@@ -309,10 +323,6 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	cheapestElevator	= 0
 	cheapestCost		:= math.Inf(1)
 	
-	if buttonType == 2 {
-		costs[0] = 0
-	}
-	
 	for i:=0; i<numberOfElevators; i++ {
 		if costs[i] < int(cheapestCost) {
 			cheapestElevator = i
@@ -332,31 +342,36 @@ func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan ch
 	for {
 		select {
 		case button = <- upButtonChan:
-			Printf("up button pressed")
 			chosenElevator = costFunction(button, 0)
-			//ackTimerChan <- "acktimer" //funkar inte
-			Printf("up button pressed")
+			ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 0, chosenElevator, button)
+			
 		case button = <- downButtonChan:
 			chosenElevator = costFunction(button, 1)
-			//ackTimerChan <- "acktimer"//funkar inte
+			ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 1, chosenElevator, button)
+			
 		case button = <- commandButtonChan:
-			chosenElevator = costFunction(button, 2)
-			//ackTimerChan <- "acktimer"//funkar inte
+			chosenElevator = 0
 			sendChan <- wrapMessage("newOrder", 2, chosenElevator, button)
-		case ack = <- ackTimeoutChan:
-			ack = ack ////////////////// fjærn!!!!
+			
+		case ack = <- ackTimerChan:
+			ack = ack //hack
 			// ta ordre selv
+			
 		case message = <- receiveChan:
 			elevator, floor, buttonType, order, messageType := unwrapMessage(message)
 			handleMessage(sendChan, elevator, floor, buttonType, order, messageType)
+			
 		case previousFloors[0] = <- floorChan:
-			sendChan <- wrapMessage("floorReached", 0, 0, previousFloors[0])
-			event_floorReached(doorTimerChan)
-		//case ordre fullføres
-			//nextDirection()
-		//case ack mottatt
+			stateOfShouldStop := shouldStop()
+			if stateOfShouldStop == 1 {
+				sendChan <- wrapMessage("orderCompleted", 0, 0, previousFloors[0])
+			} else {
+				sendChan <- wrapMessage("floorReached", 0, 0, previousFloors[0])
+			}
+			event_floorReached(stateOfShouldStop, doorTimerChan)
+			
 		case <- doorTimerChan:
 			Printf("door timer finished\n")
 			event_doorTimerOut()
@@ -369,8 +384,13 @@ func event_newOrder() {
 	case IDLE:
 		//set button lamp
 		if nextDirection() == STOP {  
-			state = IDLE;
-			Print("state = IDLE\n")
+			//state = IDLE;
+			//Print("state = IDLE\n")
+			driver.Set_door_open_lamp(1)
+			doorTimerChan <- "start"
+			state = DOOR_OPEN
+			Print("state = DOOR_OPEN\n")
+			sendChan <- wrapMessage("orderCompleted", 0, 0, previousFloors[0])
 		} else if nextDirection() == UP {
 			driver.Set_motor_direction(UP);
 			directions[0] = UP;
@@ -391,15 +411,15 @@ func event_newOrder() {
 	}
 }
 
-func event_floorReached(doorTimerChan chan string) {
-	// set floor lights
+func event_floorReached(stateOfShouldStop int, doorTimerChan chan string) {
+	driver.Set_floor_indicator(previousFloors[0])
 	switch state {
 	case IDLE:
 		Printf("ERROR, event: floorReached when not moving!")
 	case DOOR_OPEN:
 		Printf("ERROR, event: floorReached when not moving!")
 	case MOVING:
-		if shouldStop() == 1 {
+		if stateOfShouldStop == 1 {
 			driver.Set_motor_direction(STOP)
 			driver.Set_door_open_lamp(1)
 			doorTimerChan <- "start"
@@ -419,14 +439,14 @@ func event_doorTimerOut() {
 			state = IDLE;
 			Print("state = IDLE\n")
 		} else if nextDirection() == UP {
-			driver.Set_motor_direction(UP);
-			directions[0] = UP;
- 			state = MOVING;
+			driver.Set_motor_direction(UP)
+			directions[0] = UP
+ 			state = MOVING
  			Print("state = MOVING\n")
 		} else if nextDirection() == DOWN {
-			driver.Set_motor_direction(DOWN);
-			directions[0] = DOWN;
-			state = MOVING;
+			driver.Set_motor_direction(DOWN)
+			directions[0] = DOWN
+			state = MOVING
 			Print("state = MOVING\n")
 		} else {
 			Printf("ERROR, event_doorTimerOut: nextDirection returns invalid value")
@@ -436,8 +456,9 @@ func event_doorTimerOut() {
 	}
 }
 
-func shouldStop() int{
+func shouldStop() int {
 	if directions[0] == UP {
+		Printf("ordersUp: %d, OrdersDown: %d \n", ordersUp[0][previousFloors[0]], ordersDown[0][previousFloors[0]])
 		if (ordersUp[0][previousFloors[0]] | ordersOut[0][previousFloors[0]]) != 0 {
 			return 1;
 		}

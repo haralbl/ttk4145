@@ -8,7 +8,7 @@ TODO:
 	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
 	bruke kun channels til /driver?
 	
-	MÅ VI HA 2 kanaler for å sende meldinger begge veier, for å unngå deadlock
+	spamme helt til acktimeout, ikke bare spamme 5 ganger
 
 script:
 	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)
