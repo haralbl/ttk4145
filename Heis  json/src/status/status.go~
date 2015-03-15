@@ -5,9 +5,8 @@ import (
 	"strings"
 	"strconv"
 	"network"
-	//"math"
+	"math"
 	"driver"
-	"math/rand"
 	//"time"
 	//"./Timer"
 )
@@ -104,67 +103,53 @@ func unwrapMessage(message string) (elevator int, floor int, buttonType int, ord
 	statusFields := strings.Split(message, "\n")
 	
 	// update status
-	statusLine				:= strings.Split(statusFields[4], " ")
-	temp 					:= 0
-	currentIPtoUpdate		:= ""
-	currentPositionToUpdate := 0
-	
+	temp := 0
+	field := strings.Split(statusFields[5], " ")
+	for i:=1; i<numberOfElevators; i++ {
+		temp,_	= strconv.Atoi(field[i])
+		previousFloors[i] = temp
+	}
+	field = strings.Split(statusFields[6], " ")
+	for i:=1; i<numberOfElevators; i++ {
+		temp,_		= strconv.Atoi(field[i])
+		inFloor[i] = temp
+	}
+	field = strings.Split(statusFields[7], " ")
+	for i:=1; i<numberOfElevators; i++ {
+		temp,_		= strconv.Atoi(field[i])
+		directions[i] = temp
+	}
 	for i:=0; i<numberOfElevators; i++ {
-		currentIPtoUpdate = statusLine[i]
-		currentPositionToUpdate = -1
-		for j:=0; j<numberOfElevators; j++ {
-			Printf("Length 1: %s\n", len(currentIPtoUpdate))
-			Println(message)
-			Printf("Length 2: %s\n", len(activeElevators[j]))
-			if currentIPtoUpdate == activeElevators[j] {
-				currentPositionToUpdate = j
-			}
-		}
-		if currentPositionToUpdate == -1 {
-			Println("received IP in message that i dont have myself")
-		} else {
-			statusLine = strings.Split(statusFields[5], " ")
-			temp,_	= strconv.Atoi(statusLine[i])
-			previousFloors[i] = temp
-			
-			statusLine = strings.Split(statusFields[6], " ")
-			temp,_		= strconv.Atoi(statusLine[i])
-			inFloor[i] = temp
-			
-			statusLine = strings.Split(statusFields[7], " ")
-			temp,_		= strconv.Atoi(statusLine[i])
-			directions[i] = temp
-			
-			statusLine = strings.Split(statusFields[8+i], " ")
-			for j:=0; j<numberOfFloors; j++ {
-				temp,_	= strconv.Atoi(statusLine[3*j+0])
-				ordersUp[i][j] = ordersUp[i][j] | temp
-				temp,_	= strconv.Atoi(statusLine[3*j+1])
-				ordersDown[i][j] = ordersDown[i][j] | temp
-				temp,_	= strconv.Atoi(statusLine[3*j+2])
-				ordersOut[i][j] = ordersOut[i][j] | temp
-			}
+		field = strings.Split(statusFields[8+i], " ")
+		for j:=0; j<numberOfFloors; j++ {
+			temp,_	= strconv.Atoi(field[3*j+0])
+			ordersUp[i][j] = ordersUp[i][j] | temp
+			temp,_	= strconv.Atoi(field[3*j+1])
+			ordersDown[i][j] = ordersDown[i][j] | temp
+			temp,_	= strconv.Atoi(field[3*j+2])
+			ordersOut[i][j] = ordersOut[i][j] | temp
 		}
 	}
+	
 	// add new info to status
 	messageType = statusFields[0]
 	
 	for i:=0; i<numberOfElevators; i++ {
-		statusLine = strings.Split(statusFields[1+i], " ")
+		field = strings.Split(statusFields[1+i], " ")
 		for j:=0; j<numberOfFloors; j++ {
-			order,_ = strconv.Atoi(statusLine[3*j+0])
+			order,_ = strconv.Atoi(field[3*j+0])
 			if order == 1 {
 				elevator = i
 				floor = j
 				buttonType = 0
 			}
-			order,_ = strconv.Atoi(statusLine[3*j+1])
+			order,_ = strconv.Atoi(field[3*j+1])
 			if order == 1 {
 				elevator = i
 				floor = j
 				buttonType = 1
 			}
-			order,_ = strconv.Atoi(statusLine[3*j+2])
+			order,_ = strconv.Atoi(field[3*j+2])
 			if order == 1 {
 				elevator = i
 				floor = j
@@ -174,8 +159,8 @@ func unwrapMessage(message string) (elevator int, floor int, buttonType int, ord
 	}
 	
 	// sjekk opp mot IP liste i message
-	
-	elevatorIP := strings.Split(statusFields[4], " ")[elevator]
+	ipList := strings.Split(statusFields[4], " ")
+	elevatorIP := ipList[elevator]
 	for i:= 0; i<numberOfElevators; i++{
 		if activeElevators[i] == elevatorIP {
 			elevator = i
@@ -184,13 +169,12 @@ func unwrapMessage(message string) (elevator int, floor int, buttonType int, ord
 	return
 }
 
-//flytte til network?
-func handleMessage(sendChan chan string, ackResetChan chan string, doorTimerChan chan string, elevator int, floor int, buttonType int, order int, messageType string){
+func handleMessage(sendChan chan string, doorTimerChan chan string, elevator int, floor int, buttonType int, order int, messageType string){
 	switch (messageType) {
 	case "ack":
 		Println("received ack")
 		
-		ackResetChan <- "Reset acktimer"
+		//reset ack timer?
 		// legge til ordre du ikke selv skal ta
 		//sette knappelys hvis ikke du tar ordren selv
 		
@@ -296,7 +280,7 @@ func removeElevator(elevatorN int) {
 	activeElevators[elevatorN] = "empty"
 }
 
-func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan chan int, sendChan chan string) {
+func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan chan int, sendChan, chan string) {
 	var elevatorIP	string
 	var elevatorN	int
 	for {
@@ -314,11 +298,7 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 		}
 	}
 }
-func costFunction(floor int, buttonType int) int {
-	floor = floor
-	buttonType = buttonType 
-	return rand.Intn(2)
-}/*
+
 func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	var costs[numberOfElevators]int
 	for i:=0; i<numberOfElevators; i++ {
@@ -352,13 +332,11 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 		}
 	}
 	return
-}*/
+}
 
-// flytte til fsm?
 func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan chan int,
 					commandButtonChan chan int, floorChan chan int, ackTimerChan chan string,
-					receiveChan chan string, ackTimeoutChan chan string, ackResetChan chan string,
-					doorTimerChan chan string) {
+					receiveChan chan string, ackTimeoutChan chan string, doorTimerChan chan string) {
 	var ack				string
 	var button			int
 	//var currentFloor	int
@@ -386,7 +364,7 @@ func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan ch
 			
 		case message = <- receiveChan:
 			elevator, floor, buttonType, order, messageType := unwrapMessage(message)
-			handleMessage(sendChan, ackResetChan, doorTimerChan, elevator, floor, buttonType, order, messageType)
+			handleMessage(sendChan, doorTimerChan, elevator, floor, buttonType, order, messageType)
 			
 		case previousFloors[0] = <- floorChan:
 			stateOfShouldStop := shouldStop()
