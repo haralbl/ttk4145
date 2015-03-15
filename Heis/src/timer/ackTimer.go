@@ -13,7 +13,7 @@ var (
 	ackTimerFlag	bool = false
 )
 
-func AckTimer(ackTimerChan chan string, ackTimeoutChan chan string) {
+func AckTimer(ackTimerChan chan string, ackTimeoutChan chan string, ackResetChan chan string) {
 	go checkAckTimer(ackTimeoutChan)
 	for {
 		select {
@@ -22,6 +22,8 @@ func AckTimer(ackTimerChan chan string, ackTimeoutChan chan string) {
 			ackTimerFlag = true
 		case <- ackTimeoutChan:
 			ackTimerChan <- "ackTimeout"
+		case <- ackResetChan:
+			ackTimerFlag = false
 		}
 	}
 }

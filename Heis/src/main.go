@@ -26,6 +26,7 @@ func main() {
 	doorTimeoutChan			:= make(chan int)
 	ackTimerChan			:= make(chan string)
 	ackTimeoutChan			:= make(chan string)
+	ackResetChan			:= make(chan string)
 	
 	doneChan				:= make(chan string)
 	initChan				:= make(chan string)
@@ -55,11 +56,11 @@ func main() {
 	
 	go timer.ElevatorTimer(elevatorTimerChan, elevatorTimeoutChan)
 	go timer.DoorTimer(doorTimerChan, doorTimeoutChan)
-	go timer.AckTimer(ackTimerChan, ackTimeoutChan)
+	go timer.AckTimer(ackTimerChan, ackTimeoutChan, ackResetChan)
 	
 	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan, sendChan)
 	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan,
-							ackTimerChan, receiveChan, ackTimeoutChan,
+							ackTimerChan, receiveChan, ackTimeoutChan, ackResetChan,
 							doorTimerChan)
 	
 	

@@ -5,8 +5,9 @@ import (
 	"strings"
 	"strconv"
 	"network"
-	"math"
+	//"math"
 	"driver"
+	"math/rand"
 	//"time"
 	//"./Timer"
 )
@@ -169,12 +170,13 @@ func unwrapMessage(message string) (elevator int, floor int, buttonType int, ord
 	return
 }
 
-func handleMessage(sendChan chan string, doorTimerChan chan string, elevator int, floor int, buttonType int, order int, messageType string){
+//flytte til network?
+func handleMessage(sendChan chan string, ackResetChan chan string, doorTimerChan chan string, elevator int, floor int, buttonType int, order int, messageType string){
 	switch (messageType) {
 	case "ack":
 		Println("received ack")
 		
-		//reset ack timer?
+		ackResetChan <- "Reset acktimer"
 		// legge til ordre du ikke selv skal ta
 		//sette knappelys hvis ikke du tar ordren selv
 		
@@ -298,7 +300,11 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 		}
 	}
 }
-
+func costFunction(floor int, buttonType int) int {
+	floor = floor
+	buttonType = buttonType 
+	return rand.Intn(1)
+}/*
 func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	var costs[numberOfElevators]int
 	for i:=0; i<numberOfElevators; i++ {
@@ -332,11 +338,13 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 		}
 	}
 	return
-}
+}*/
 
+// flytte til fsm?
 func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan chan int,
 					commandButtonChan chan int, floorChan chan int, ackTimerChan chan string,
-					receiveChan chan string, ackTimeoutChan chan string, doorTimerChan chan string) {
+					receiveChan chan string, ackTimeoutChan chan string, ackResetChan chan string,
+					doorTimerChan chan string) {
 	var ack				string
 	var button			int
 	//var currentFloor	int
@@ -364,7 +372,7 @@ func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan ch
 			
 		case message = <- receiveChan:
 			elevator, floor, buttonType, order, messageType := unwrapMessage(message)
-			handleMessage(sendChan, doorTimerChan, elevator, floor, buttonType, order, messageType)
+			handleMessage(sendChan, ackResetChan, doorTimerChan, elevator, floor, buttonType, order, messageType)
 			
 		case previousFloors[0] = <- floorChan:
 			stateOfShouldStop := shouldStop()
