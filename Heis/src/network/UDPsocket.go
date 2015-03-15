@@ -44,6 +44,7 @@ func Receive(receiveChan chan string){
 		    
 		if err != nil {
 			Printf("error Receive 2")}
+		println(string(data[:256]))
 		receiveChan <- string(data[:256])
 	}
 }

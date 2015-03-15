@@ -104,34 +104,45 @@ func unwrapMessage(message string) (elevator int, floor int, buttonType int, ord
 	statusFields := strings.Split(message, "\n")
 	
 	// update status
-	temp := 0
-	field := strings.Split(statusFields[5], " ")
-	for i:=1; i<numberOfElevators; i++ {
-		temp,_	= strconv.Atoi(field[i])
-		previousFloors[i] = temp
-	}
-	field = strings.Split(statusFields[6], " ")
-	for i:=1; i<numberOfElevators; i++ {
-		temp,_		= strconv.Atoi(field[i])
-		inFloor[i] = temp
-	}
-	field = strings.Split(statusFields[7], " ")
-	for i:=1; i<numberOfElevators; i++ {
-		temp,_		= strconv.Atoi(field[i])
-		directions[i] = temp
-	}
+	field					:= strings.Split(statusFields[4], " ")
+	temp 					:= 0
+	currentIPtoUpdate		:= ""
+	currentPositionToUpdate := 0
+	
 	for i:=0; i<numberOfElevators; i++ {
-		field = strings.Split(statusFields[8+i], " ")
-		for j:=0; j<numberOfFloors; j++ {
-			temp,_	= strconv.Atoi(field[3*j+0])
-			ordersUp[i][j] = ordersUp[i][j] | temp
-			temp,_	= strconv.Atoi(field[3*j+1])
-			ordersDown[i][j] = ordersDown[i][j] | temp
-			temp,_	= strconv.Atoi(field[3*j+2])
-			ordersOut[i][j] = ordersOut[i][j] | temp
+		currentIPtoUpdate = field[i]
+		currentPositionToUpdate = -1
+		for j:=0; j<numberOfElevators; j++ {
+			if currentIPtoUpdate == activeElevators[j] {
+				currentPositionToUpdate = j
+			}
+		}
+		if currentPositionToUpdate == -1 {
+			Println("received IP in message that i dont have myself")
+		} else {
+			field = strings.Split(statusFields[5], " ")
+			temp,_	= strconv.Atoi(field[i])
+			previousFloors[i] = temp
+			
+			field = strings.Split(statusFields[6], " ")
+			temp,_		= strconv.Atoi(field[i])
+			inFloor[i] = temp
+			
+			field = strings.Split(statusFields[7], " ")
+			temp,_		= strconv.Atoi(field[i])
+			directions[i] = temp
+			
+			field = strings.Split(statusFields[8+i], " ")
+			for j:=0; j<numberOfFloors; j++ {
+				temp,_	= strconv.Atoi(field[3*j+0])
+				ordersUp[i][j] = ordersUp[i][j] | temp
+				temp,_	= strconv.Atoi(field[3*j+1])
+				ordersDown[i][j] = ordersDown[i][j] | temp
+				temp,_	= strconv.Atoi(field[3*j+2])
+				ordersOut[i][j] = ordersOut[i][j] | temp
+			}
 		}
 	}
-	
 	// add new info to status
 	messageType = statusFields[0]
 	
@@ -160,8 +171,8 @@ func unwrapMessage(message string) (elevator int, floor int, buttonType int, ord
 	}
 	
 	// sjekk opp mot IP liste i message
-	ipList := strings.Split(statusFields[4], " ")
-	elevatorIP := ipList[elevator]
+	
+	elevatorIP := strings.Split(statusFields[4], " ")[elevator]
 	for i:= 0; i<numberOfElevators; i++{
 		if activeElevators[i] == elevatorIP {
 			elevator = i
@@ -303,7 +314,7 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 func costFunction(floor int, buttonType int) int {
 	floor = floor
 	buttonType = buttonType 
-	return rand.Intn(1)
+	return rand.Intn(2)
 }/*
 func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	var costs[numberOfElevators]int
