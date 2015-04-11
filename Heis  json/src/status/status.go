@@ -5,7 +5,7 @@ import (
 	"network"
 	//"math"
 	"driver"
-	//"math/rand"
+	"math/rand"
 	"encoding/json"
 	//"time"
 	//"./Timer"
@@ -276,12 +276,12 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 		}
 	}
 }
-func costFunction(floor int, buttonType int) string {
+func costFunction(floor int, buttonType int) int {
 	floor = floor
 	buttonType = buttonType 
-	return ElevatorStatus.ActiveElevators[0]//rand.Intn(2)
-}/*
-func costFunction(floor int, buttonType int) (cheapestElevator int) {
+	return rand.Intn(3)//ElevatorStatus.ActiveElevators[1]
+}
+/*func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	var costs[numberOfElevators]int
 	for i:=0; i<numberOfElevators; i++ {
 		costs[i] = 0
@@ -290,18 +290,18 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	for i:=0; i<numberOfElevators; i++ {
 		for j:=0; j<numberOfFloors; j++ {
 			// Check number of orders
-			if 	OrdersUp[i][j] == 1 || OrdersDown[i][j] == 1 || OrdersOut[i][j] == 1 {
+			if ElevatorStatus.OrdersUp[i][j] == 1 || ElevatorStatus.OrdersDown[i][j] == 1 || ElevatorStatus.OrdersOut[i][j] == 1 {
 				costs[i] += 10
 			}
 		}
 		// Check if direction towards order
-		if (floor > PreviousFloors[i] && Directions[i] == 1) || (floor < PreviousFloors[i] && Directions[i] == 0) {
+		if (floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == 1) || (floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == 0) {
 			costs[i] += 5*numberOfFloors
 		}
 		// Check distances
-		costs[i] += int(2*math.Abs(float64(floor) - float64(PreviousFloors[i])))
+		costs[i] += int(2*math.Abs(float64(floor) - float64(ElevatorStatus.PreviousFloors[i])))
 		// Check if same direction as order
-		if buttonType != Directions[i] {
+		if buttonType != ElevatorStatus.Directions[i] {
 			costs[i] += 5*numberOfFloors
 		}
 	}
@@ -332,7 +332,7 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			
 			//PrintStatus(ElevatorStatus)
 			
-			chosenElevator = costFunction(button, 0)
+			chosenElevator = ElevatorStatus.ActiveElevators[costFunction(button, 0)]
 			ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 0, chosenElevator, button)
 			
@@ -340,7 +340,7 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			
 			//PrintStatus(ElevatorStatus)
 			
-			chosenElevator = costFunction(button, 1)
+			chosenElevator = ElevatorStatus.ActiveElevators[costFunction(button, 1)]
 			ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 1, chosenElevator, button)
 			
@@ -356,7 +356,7 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			// ta ordre selv
 			
 		case message = <- receiveChan:
-			Printf("direction: %d\n", ElevatorStatus.Directions[0])
+			PrintStatus(ElevatorStatus)
 			
 			elevator, floor, buttonType, MessageType := unwrapMessage(message)
 			

@@ -1,10 +1,8 @@
 TODO:
 	slå sammen buttonChans?
-	del opp handleMessage i /status
 	Calling GetLocalIP() more than once
 	/timer assumes 3 elevators
 	checking if oneself is alive...
-	use buffers in any of the channels?
 	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
 	bruke kun channels til /driver?
 	

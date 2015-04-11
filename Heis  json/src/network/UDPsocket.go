@@ -34,6 +34,7 @@ func Send(sendChan chan []byte){
 			if err != nil {
 				Printf("error Send 2")
 			}
+			
 		}
 	}
 }
