@@ -14,7 +14,7 @@ TODO:
 
 script:
 	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)
-	export GOPATH=$HOME/ttk4145/Heis
+	export GOPATH=$HOME/ttk4145/"Heis  json"
 	cd src
 	go build main.go
 	go run main.go

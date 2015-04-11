@@ -10,9 +10,7 @@ TODO:
 	
 	spamme helt til acktimeout, ikke bare spamme 5 ganger
 	
-	send ut statusupdate når en annen heis dukker opp
-	slik at den heisen kan ta seg av gamle utordre
-	uten å vente på at noe annet skal skje og trigge statusupdate
+	test updateAwokenElevator
 
 script:
 	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)
@@ -47,4 +45,9 @@ prosedyre KostFunksjon(kø rutenett) {
 
 
 
+SE STATUS LINJE 168 {
+	vi har endret til json.
+	json.Unmarshal() eller noe etter gir ut tom statusstruct.
+	Kan det være at vi prøver å passe et receiveobjekt på kanal og at dette så forsvinner fordi det er lagret lokalt i funksjonen receive
+}
 

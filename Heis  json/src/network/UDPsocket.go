@@ -3,12 +3,16 @@ package network
 import (
 	."fmt"
 	"net"
-	"structDefine"
-	"encoding/json"
+	//"structDefine"
+	//"encoding/json"
 )
 
 const (
 	numberOfRetries int = 1 ////////////////////////////// ØK TIL 5
+)
+
+var (
+	lastMsgLength int
 )
 
 func Send(sendChan chan []byte){
@@ -34,27 +38,32 @@ func Send(sendChan chan []byte){
 	}
 }
 
-func Receive(receiveChan chan structDefine.ElevatorStatus_t){
+func Receive(receiveChan chan []byte){
 	addr, _ := net.ResolveUDPAddr("udp4", ":58017")
 	socket, err := net.ListenUDP("udp4", addr)
-	var ReceivedStatus structDefine.ElevatorStatus_t
+	//var ReceivedStatus structDefine.ElevatorStatus_t
 	if err != nil {
 		Printf("error Receive 1")}
 	
 	for {
 		data := make([]byte, 4096)
-		_,_,err := socket.ReadFromUDP(data)
-		    
+		length,_,err := socket.ReadFromUDP(data)
+		lastMsgLength = length
+		/*messageLengthChan <- msgLength*/
 		if err != nil {
 			Printf("error Receive 2")}
+		//println("hola señor")
 		//println(string(data[:4096]))
 
-		json.Unmarshal(data, &ReceivedStatus)
-		receiveChan <- ReceivedStatus
+		//json.Unmarshal(data, &ReceivedStatus)
+		//receiveChan <- ReceivedStatus
+		receiveChan <- data
 	}
 }
 
-
+func GetLastMsgLength() int {
+	return lastMsgLength
+}
 
 
 

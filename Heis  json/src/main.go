@@ -9,7 +9,7 @@ import (
 	"driver"
 	//"strings"
 	"os"
-	"structDefine"
+	//"structDefine"
 )
 
 var (
@@ -19,7 +19,7 @@ var (
 func main() {
 	
 	sendChan				:= make(chan []byte)
-	receiveChan 			:= make(chan structDefine.ElevatorStatus_t)
+	receiveChan 			:= make(chan []byte)
 	receiveAliveMessageChan := make(chan string)
 	elevatorTimerChan		:= make(chan int)
 	elevatorTimeoutChan		:= make(chan int)

@@ -103,30 +103,24 @@ func wrapMessage(newMessageType string, buttonType int, elevator string, floor i
 	ElevatorStatus.OrderedElevator		= elevator
 	ElevatorStatus.OrderedFloor			= floor
 	
-	ElevatorStatus.OrdersUp[0][0] = 1
-	PrintStatus(ElevatorStatus)
+
 	message := make([]byte, 1024)
 	message,_ = json.Marshal(ElevatorStatus)
-	
-	//testing if possible to unmarshal
-	var receivedStatus structDefine.ElevatorStatus_t
-	json.Unmarshal(message, &receivedStatus)
-	Printf("SPLIT\n\n\n\n\n%d\n", floor)
-	PrintStatus(receivedStatus)
-	Printf("TEST	: %d\n", floor)
-
 	
 	return []byte(message)
 }
 
-func unwrapMessage(receivedStatus structDefine.ElevatorStatus_t) (elevator string, floor int, buttonType int, MessageType string) {
-	//newMessage := make([]byte, 1024)
-	//newMessage = message
-	//Println(string(newMessage))
-	//var receivedStatus structDefine.ElevatorStatus_t
-	//json.Unmarshal(newMessage, &receivedStatus)
-	//Printf("\n\n\n\n\n\n\n")
-	//PrintStatus(receivedStatus)
+func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, MessageType string) {
+	
+	var receivedStatus structDefine.ElevatorStatus_t
+	//msgLength := data[
+	err := json.Unmarshal(message[0:network.GetLastMsgLength()], &receivedStatus)
+	if err != nil {
+		Println(err)
+	}
+
+	PrintStatus(receivedStatus)
+	
 	// update status
 	currentIPtoUpdate		:= ""
 	currentPositionToUpdate := 0
@@ -135,10 +129,6 @@ func unwrapMessage(receivedStatus structDefine.ElevatorStatus_t) (elevator strin
 		currentIPtoUpdate = receivedStatus.ActiveElevators[i]
 		currentPositionToUpdate = -1
 		for j:=0; j<numberOfElevators; j++ {
-			//Printf("Length 1: %d\n", len(currentIPtoUpdate))
-			//Printf("1: %s\n", currentIPtoUpdate)
-			//Printf("Length 2: %d\n", len(receivedStatus.ActiveElevators[j]))
-			//PrintStatus()
 			if currentIPtoUpdate == receivedStatus.ActiveElevators[j] {
 				currentPositionToUpdate = j
 			}
@@ -160,6 +150,9 @@ func unwrapMessage(receivedStatus structDefine.ElevatorStatus_t) (elevator strin
 	elevator	= receivedStatus.OrderedElevator
 	floor		= receivedStatus.OrderedFloor
 	buttonType	= receivedStatus.OrderedButtonType
+	
+	Printf("msgtype: %s\nelevator: %s\nfloor: %d\nbuttonType: %d\n", MessageType, elevator, floor, buttonType)
+	
 	return
 }
 
@@ -223,7 +216,7 @@ func handleMessage(sendChan chan []byte, ackResetChan chan string, doorTimerChan
 }
 
 func elevatorIPtoIndex(elevatorIP string) (elevatorIndex int) {
-	elevatorIndex = -1
+	elevatorIndex = 0
 	for i:=0; i<numberOfElevators; i++ {
 		if elevatorIP == ElevatorStatus.ActiveElevators[i] {
 			elevatorIndex = i
@@ -326,26 +319,35 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 // flytte til fsm?
 func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan chan int,
 					commandButtonChan chan int, floorChan chan int, ackTimerChan chan string,
-					receiveChan chan structDefine.ElevatorStatus_t, ackTimeoutChan chan string, ackResetChan chan string,
+					receiveChan chan []byte, ackTimeoutChan chan string, ackResetChan chan string,
 					doorTimerChan chan string) {
 	var ack				string
 	var button			int
 	//var currentFloor	int
 	var chosenElevator	string
-	var message			structDefine.ElevatorStatus_t
+	var message			[]byte
 	for {
 		select {
 		case button = <- upButtonChan:
+			
+			PrintStatus(ElevatorStatus)
+			
 			chosenElevator = costFunction(button, 0)
 			ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 0, chosenElevator, button)
 			
 		case button = <- downButtonChan:
+			
+			PrintStatus(ElevatorStatus)
+			
 			chosenElevator = costFunction(button, 1)
 			ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 1, chosenElevator, button)
 			
 		case button = <- commandButtonChan:
+			
+			PrintStatus(ElevatorStatus)
+			
 			chosenElevator = ElevatorStatus.ActiveElevators[0]
 			sendChan <- wrapMessage("newOrder", 2, chosenElevator, button)
 			
@@ -354,9 +356,9 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			// ta ordre selv
 			
 		case message = <- receiveChan:
-			Println("HEEKASOEKAOSJDIOAJSIDOJ")
-			PrintStatus(message)
+			//json.Unmarshal(data, &ReceivedStatus)
 			elevator, floor, buttonType, MessageType := unwrapMessage(message)
+			
 			handleMessage(sendChan, ackResetChan, doorTimerChan, elevator, floor, buttonType, MessageType)
 			
 		case ElevatorStatus.PreviousFloors[0] = <- floorChan:
@@ -379,7 +381,7 @@ func event_newOrder(sendChan chan []byte, doorTimerChan chan string) {
 	switch (ElevatorStatus.State) {
 	case IDLE:
 		//set button lamp
-		if nextDirection() == STOP {  
+		if nextDirection() == STOP {
 			//State = IDLE;
 			//Print("State = IDLE\n")
 			driver.Set_door_open_lamp(1)
@@ -479,18 +481,27 @@ func shouldStop() int {
 
 func nextDirection() int {
 	if ElevatorStatus.PreviousFloors[0] == 0 {
+	
+		Println("YOLO etasje 0")
+	
 		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<4; floor++ {
 			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return UP;
 			}
 		}
 	} else if ElevatorStatus.PreviousFloors[0] == numberOfFloors {
+	
+		Println("YOLO etasje 3")
+	
 		for floor:=0; floor<ElevatorStatus.PreviousFloors[0]; floor++ {
 			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return DOWN;
  			}
 		}
 	} else if (ElevatorStatus.Directions[0] == UP){
+	
+		Println("YOLO retning opp")
+	
 		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<4; floor++ {
 			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return UP;
@@ -502,6 +513,9 @@ func nextDirection() int {
 			}
 		}
 	} else if (ElevatorStatus.Directions[0] == DOWN){
+	
+		Println("YOLO retning ned")
+	
 		for floor:=0; floor<ElevatorStatus.PreviousFloors[0]; floor++ {
 			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return DOWN;
