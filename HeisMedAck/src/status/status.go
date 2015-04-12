@@ -110,11 +110,14 @@ func wrapMessage(newMessageType string, buttonType int, elevator string, floor i
 	return []byte(message)
 }
 
+func getMessageLength(message []byte) int {
+	return int(message[1000]) + int(message[1001])*10 + int(message[1002])*100
+}
 func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, MessageType string) {
 	
 	var receivedStatus structDefine.ElevatorStatus_t
-	//msgLength := data[
-	err := json.Unmarshal(message[0:network.GetLastMsgLength()], &receivedStatus)
+	
+	err := json.Unmarshal(message[0:getMessageLength(message)], &receivedStatus)
 	if err != nil {
 		Println(err)
 	}
@@ -156,15 +159,84 @@ func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, 
 	return
 }
 
+func CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendChan chan []byte, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan chan []byte) {
+	var data []byte
+	for {
+		select {
+		case data = <- checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan:
+			var tempStatus structDefine.ElevatorStatus_t
+			err := json.Unmarshal(data[0:getMessageLength(data)], &tempStatus)
+			if err != nil {
+				Println(err)
+			}
+			var elevator int = -1
+			for i:=0; i<numberOfElevators; i++ {
+				if tempStatus.OrderedElevator == ElevatorStatus.ActiveElevators[i] {
+					elevator = i
+				}
+			}
+			buttonType 	:= tempStatus.OrderedButtonType
+			floor 		:= tempStatus.OrderedFloor
+			orderNotAddedFlag:= 0
+			if elevator != -1 {
+				switch(buttonType) {
+				case 0:
+					if ElevatorStatus.OrdersUp[elevator][floor] != 1 {
+						orderNotAddedFlag = 1
+					}
+				case 1:
+					if ElevatorStatus.OrdersDown[elevator][floor] != 1 {
+						orderNotAddedFlag = 1
+					}
+				case 2:
+					if ElevatorStatus.OrdersOut[elevator][floor] != 1 {
+						orderNotAddedFlag = 1
+					}
+				}
+			} else {
+				orderNotAddedFlag = 1
+			}
+	
+			if orderNotAddedFlag == 1 {
+				sendChan <- wrapMessage("newOrder", buttonType, ElevatorStatus.ActiveElevators[0], floor)
+			} 
+		}
+	}
+	
+		
+	
+}
+
 //flytte til network?
 func handleMessage(sendChan chan []byte, ackResetChan chan string, doorTimerChan chan string, elevatorIP string, floor int, buttonType int, MessageType string){
 	switch (MessageType) {
 	case "":
 		Println("json is eating the message, and shitting out an empty status")
 	case "ack":
+		//tenne lys!!!
 		Println("received ack")
-		
 		ackResetChan <- "Reset acktimer"
+		
+		var elevator int = -1
+		for i:=0; i<numberOfElevators; i++ {
+			if elevatorIP == ElevatorStatus.ActiveElevators[i] {
+				elevator = i
+			}
+		}
+		if elevator == -1 {
+			Println("It appears to be a fuckup in handlemessage() > case ack. I will take it myself.")
+			elevator = 0
+		}
+		
+		switch(buttonType) {
+		case 0:
+			ElevatorStatus.OrdersUp[elevator][floor] = 1
+		case 1:
+			ElevatorStatus.OrdersDown[elevator][floor] = 1
+		case 2:
+			ElevatorStatus.OrdersOut[elevator][floor] = 1
+		}
+		
 		// legge til ordre du ikke selv skal ta
 		//sette knappelys hvis ikke du tar ordren selv
 		
@@ -179,19 +251,19 @@ func handleMessage(sendChan chan []byte, ackResetChan chan string, doorTimerChan
 			switch (buttonType) {
 			case 0:
 				if ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
-					sendChan <- wrapMessage("ack", buttonType, elevatorIP, floor)
+					//sendChan <- wrapMessage("ack", buttonType, elevatorIP, floor) //denne må vekk
 					ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor] = 1
 					event_newOrder(sendChan, doorTimerChan)
 				}
 			case 1:
 				if ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
-					sendChan <- wrapMessage("ack", buttonType, elevatorIP, floor)
+					//sendChan <- wrapMessage("ack", buttonType, elevatorIP, floor) 
 					ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 1
 					event_newOrder(sendChan, doorTimerChan)
 				}
 			case 2:
-				if ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
-					sendChan <- wrapMessage("ack", buttonType, elevatorIP, floor)
+				if ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
+					//sendChan <- wrapMessage("ack", buttonType, elevatorIP, floor)
 					ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor] = 1
 					event_newOrder(sendChan, doorTimerChan)
 				}
@@ -200,7 +272,7 @@ func handleMessage(sendChan chan []byte, ackResetChan chan string, doorTimerChan
 		
 	case "floorReached":
 		Println("received floorReached")
-		
+		//HER MÅ VI VEL HUSKE Å OPPDATERE PREVIOUS FLOORS I STATUS
 	case "orderCompleted":
 		Println("received orderCompleted")
 		
@@ -339,7 +411,6 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 					commandButtonChan chan int, floorChan chan int, ackTimerChan chan string,
 					receiveChan chan []byte, ackTimeoutChan chan string, ackResetChan chan string,
 					doorTimerChan chan string) {
-	var ack				string
 	var button			int
 	//var currentFloor	int
 	var chosenElevator	string
@@ -369,10 +440,7 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			chosenElevator = ElevatorStatus.ActiveElevators[0]
 			sendChan <- wrapMessage("newOrder", 2, chosenElevator, button)
 			
-		case ack = <- ackTimerChan:
-			ack = ack //hack
-			// ta ordre selv
-			
+
 		case message = <- receiveChan:
 			PrintStatus(ElevatorStatus)
 			

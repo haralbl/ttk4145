@@ -5,6 +5,8 @@ TODO:
 	checking if oneself is alive...
 	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
 	bruke kun channels til /driver?
+	fjÆrn acktimer
+	Hvis tid, fiks generell unwrap som funker i CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNot() også
 	
 	spamme helt til acktimeout, ikke bare spamme 5 ganger
 	
@@ -12,7 +14,7 @@ TODO:
 
 script:
 	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)
-	export GOPATH=$HOME/ttk4145/"Heis json"
+	export GOPATH=$HOME/ttk4145/"HeisMedAck"
 	cd src
 	go build main.go
 	go run main.go

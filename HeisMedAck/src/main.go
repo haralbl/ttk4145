@@ -37,6 +37,8 @@ func main() {
 	commandButtonChan		:= make(chan int)
 	floorChan				:= make(chan int)
 	
+	checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan := make(chan []byte)
+	
 	if driver.Init() != 1 {
 		Printf("driver.Init failed")
 		os.Exit(1)
@@ -50,7 +52,8 @@ func main() {
 	go status.Initialize(initChan, floorChan)
 	Println(<-initChan)
 	
-	go network.Send(sendChan)
+	go network.SendManager(sendChan, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan)
+	
 	go network.Receive(receiveChan)
 	go network.SendAliveMessage()
 	go network.ReceiveAliveMessage(receiveAliveMessageChan)
@@ -63,7 +66,8 @@ func main() {
 	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan,
 							ackTimerChan, receiveChan, ackTimeoutChan, ackResetChan,
 							doorTimerChan)
-	
+							
+	go status.CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendChan, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan)
 	
 	
 /*	

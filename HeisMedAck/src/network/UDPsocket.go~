@@ -3,20 +3,28 @@ package network
 import (
 	."fmt"
 	"net"
+	"time"
+	//"status"
 	//"structDefine"
 	//"encoding/json"
 )
 
 const (
-	numberOfRetries int = 1 ////////////////////////////// ØK TIL 5
+	numberOfRetries int = 5
 )
 
 var (
 	lastMsgLength int
 )
 
-func Send(sendChan chan []byte, ackedChan chan string){
+func SendManager(sendChan chan []byte, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan chan []byte) {
+	for {
+		data := <-sendChan
+		go send(data, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan)
+	}
+}
 
+func send(data []byte, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan chan []byte) {
 	BROADCAST_IPv4 := net.IPv4(129, 241, 187, 255)
 	port := 58017
 	socket, err := net.DialUDP("udp4", nil, &net.UDPAddr{
@@ -26,17 +34,14 @@ func Send(sendChan chan []byte, ackedChan chan string){
 	if err != nil {
 		Printf("error Send 1")
 	}
-	
-	for {
-		data := <-sendChan
-		for i:=0; i<numberOfRetries; i++ {
-			_, err := socket.Write(data)
-			if err != nil {
-				Printf("error Send 2")
-			}
-			
+	for i:=0; i<numberOfRetries; i++ {
+		_, err := socket.Write(data)
+		if err != nil {
+			Printf("error Send 2")
 		}
+		time.Sleep(10*time.Millisecond)
 	}
+	CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded <- data
 }
 
 func Receive(receiveChan chan []byte){
@@ -47,8 +52,12 @@ func Receive(receiveChan chan []byte){
 		Printf("error Receive 1")}
 	
 	for {
-		data := make([]byte, 4096)
+		data := make([]byte, 1024)
 		length,_,err := socket.ReadFromUDP(data)
+		data[1000] = byte(length%10)
+		data[1001] = byte((length/10)%10)
+		data[1002] = byte((length/100)%10)
+
 		lastMsgLength = length
 		/*messageLengthChan <- msgLength*/
 		if err != nil {
@@ -62,9 +71,10 @@ func Receive(receiveChan chan []byte){
 	}
 }
 
-func GetLastMsgLength() int {
+/*
+func GetLastMsgLength() int { //sanntidskrav som gir potensiale for fuckup
 	return lastMsgLength
 }
-
+*/
 
 
