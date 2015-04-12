@@ -1,10 +1,8 @@
 TODO:
 	slå sammen buttonChans?
-	del opp handleMessage i /status
 	Calling GetLocalIP() more than once
 	/timer assumes 3 elevators
 	checking if oneself is alive...
-	use buffers in any of the channels?
 	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
 	bruke kun channels til /driver?
 	
@@ -14,7 +12,7 @@ TODO:
 
 script:
 	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)
-	export GOPATH=$HOME/ttk4145/"Heis  json"
+	export GOPATH=$HOME/ttk4145/"Heis json"
 	cd src
 	go build main.go
 	go run main.go

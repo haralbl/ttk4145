@@ -1,0 +1,51 @@
+TODO:
+	slå sammen buttonChans?
+	Calling GetLocalIP() more than once
+	/timer assumes 3 elevators
+	checking if oneself is alive...
+	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
+	bruke kun channels til /driver?
+	
+	spamme helt til acktimeout, ikke bare spamme 5 ganger
+	
+	test updateAwokenElevator
+
+script:
+	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)
+	export GOPATH=$HOME/ttk4145/"Heis json"
+	cd src
+	go build main.go
+	go run main.go
+	
+Plan:
+	når knappetrykk registreres // , etasje nåes eller ordre fullføres:
+		regn ut hvilken heis som tar ordren, tempStatus = status || ny ordre
+		multispam NyOrdreMelding: tempStatus
+		start AckTimer
+		hvis AckTimer timer ut:
+			ta ordre selv
+		status = tempStatus
+	når NyOrdreMelding mottas:
+		legg til ordre på rett sted i status
+		hvis du skal ta ordren:
+			spam Ack
+
+prosedyre KostFunksjon(kø rutenett) {
+	kostnader liste
+	
+	Gjør		øk kostnader
+	Hvis		stor avstand
+	HvisHeller	du er i riktig retning
+	HvisHeller	du har færrest ordre
+	Ellers		lavest IP
+}
+
+
+
+
+SE STATUS LINJE 168 {
+	vi har endret til json.
+	json.Unmarshal() eller noe etter gir ut tom statusstruct.
+	Kan det være at vi prøver å passe et receiveobjekt på kanal og at dette så forsvinner fordi det er lagret lokalt i funksjonen receive
+}
+
