@@ -41,7 +41,7 @@ func send(data []byte, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMysel
 		}
 		time.Sleep(10*time.Millisecond)
 	}
-	CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded <- data
+	checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan <- data
 }
 
 func Receive(receiveChan chan []byte){

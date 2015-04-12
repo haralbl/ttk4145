@@ -165,7 +165,9 @@ func CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendCh
 		select {
 		case data = <- checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan:
 			var tempStatus structDefine.ElevatorStatus_t
-			err := json.Unmarshal(data[0:getMessageLength(data)], &tempStatus)
+			Println(len(data))	
+			
+			err := json.Unmarshal(data[0:len(data)], &tempStatus)
 			if err != nil {
 				Println(err)
 			}
