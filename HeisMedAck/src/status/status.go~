@@ -321,7 +321,7 @@ func handleMessage(sendChan chan []byte, /*ackResetChan chan string,*/ doorTimer
 		Println("received floorReached")
 		//ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
 		
-		ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
+		//ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
 		//ElevatorStatus.InFloor[elevatorIPtoIndex(elevatorIP)] = receivedStatus.InFloor[currentPositionInReceivedStatus]
 		//ElevatorStatus.Directions[elevatorIPtoIndex(elevatorIP)] = 
 	case "orderCompleted":
