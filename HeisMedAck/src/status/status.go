@@ -3,7 +3,7 @@ package status
 import (
 	."fmt"
 	"network"
-	//"math"
+	"math"
 	"driver"
 	//"math/rand"
 	"encoding/json"
@@ -160,42 +160,6 @@ func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, 
 	
 	//Printf("msgtype: %s\nelevator: %s\nfloor: %d\nbuttonType: %d\n", MessageType, elevator, floor, buttonType)
 	
-	
-	/*
-	// update status
-	currentIPtoUpdate		:= ""
-	currentPositionInReceivedStatus := 0
-	
-	for i:=1; i<numberOfElevators; i++ {
-		currentIPtoUpdate = receivedStatus.ActiveElevators[i]
-		currentPositionInReceivedStatus = -1
-		for j:=0; j<numberOfElevators; j++ {
-			if currentIPtoUpdate == receivedStatus.ActiveElevators[j] {
-				currentPositionInReceivedStatus = j
-			}
-		}
-		if currentPositionInReceivedStatus == -1 {
-			Println("received IP in message that i dont have myself")
-		} else {
-			//ElevatorStatus.PreviousFloors[i] = receivedStatus.PreviousFloors[currentPositionInReceivedStatus]
-			//ElevatorStatus.InFloor[i] = receivedStatus.InFloor[currentPositionInReceivedStatus]
-			//ElevatorStatus.Directions[i] = receivedStatus.Directions[currentPositionInReceivedStatus]
-			for j:=0; j<numberOfFloors; j++ {
-				ElevatorStatus.OrdersUp[i][j]	= ElevatorStatus.OrdersUp[i][j]	| receivedStatus.OrdersUp[currentPositionInReceivedStatus][j]
-				ElevatorStatus.OrdersDown[i][j] = ElevatorStatus.OrdersDown[i][j] | receivedStatus.OrdersDown[currentPositionInReceivedStatus][j]
-				ElevatorStatus.OrdersOut[i][j]	= ElevatorStatus.OrdersOut[i][j] | receivedStatus.OrdersOut[currentPositionInReceivedStatus][j]
-			}
-		}
-	}
-	MessageType	= receivedStatus.MessageType
-	elevator	= receivedStatus.OrderedElevator
-	floor		= receivedStatus.OrderedFloor
-	buttonType	= receivedStatus.OrderedButtonType
-	*/
-	
-	
-	
-	
 	return
 }
 
@@ -327,6 +291,33 @@ func handleMessage(sendChan chan []byte, /*ackResetChan chan string,*/ doorTimer
 	case "orderCompleted":
 		Println("received orderCompleted")
 		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		Println("elevatorIP in orderCompleted")
+		Println(elevatorIP)
+		Println("elevatorIP in orderCompleted2")
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
 		ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor]	= 0
 		ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 0
 		ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor]	= 0
@@ -400,7 +391,7 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 		}
 	}
 }
-func costFunction(floor int, buttonType int) int {
+/*func costFunction(floor int, buttonType int) int {
 	floor = floor
 	buttonType = buttonType
 	cheapestElevator := 0
@@ -422,8 +413,8 @@ func costFunction(floor int, buttonType int) int {
 	}
 	return cheapestElevator 
 	//return rand.Intn(3)//ElevatorStatus.ActiveElevators[1]
-}
-/*func costFunction(floor int, buttonType int) (cheapestElevator int) {
+}*/
+func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	var costs[numberOfElevators]int
 	for i:=0; i<numberOfElevators; i++ {
 		costs[i] = 0
@@ -456,7 +447,7 @@ func costFunction(floor int, buttonType int) int {
 		}
 	}
 	return
-}*/
+}
 
 // flytte til fsm?
 func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan chan int,
@@ -509,7 +500,7 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			
 		case <- doorTimerChan:
 			Printf("door timer finished\n")
-			sendChan <- wrapMessage("orderCompleted", 0, "", ElevatorStatus.PreviousFloors[0])
+			sendChan <- wrapMessage("orderCompleted", 0, ElevatorStatus.ActiveElevators[0], ElevatorStatus.PreviousFloors[0])
 			event_doorTimerOut()
 		}
 	}

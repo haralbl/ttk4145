@@ -22,6 +22,10 @@ script:
 	chmod 777 sshlogin.sh
 	./sshlogin.sh
 	
+	ssh martlei@129.241.187.158
+	scp -r /home/haralbl/ttk4145 martlei@129.241.187.158:/home/martlei
+
+	
 Plan:
 	når knappetrykk registreres // , etasje nåes eller ordre fullføres:
 		regn ut hvilken heis som tar ordren, tempStatus = status || ny ordre

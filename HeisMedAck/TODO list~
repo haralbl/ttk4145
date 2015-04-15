@@ -19,6 +19,9 @@ script:
 	go build main.go
 	go run main.go
 	
+	chmod 777 sshlogin.sh
+	./sshlogin.sh
+	
 Plan:
 	når knappetrykk registreres // , etasje nåes eller ordre fullføres:
 		regn ut hvilken heis som tar ordren, tempStatus = status || ny ordre
