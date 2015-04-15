@@ -277,7 +277,7 @@ func handleMessage(sendChan chan []byte, /*ackResetChan chan string,*/ doorTimer
 		
 	case "floorReached":
 		Println("received floorReached")
-		ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
+		//ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
 	case "orderCompleted":
 		Println("received orderCompleted")
 		
@@ -455,9 +455,9 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			
 		case ElevatorStatus.PreviousFloors[0] = <- floorChan:
 			StateOfShouldStop := shouldStop()
-			if StateOfShouldStop != 1 {
-				sendChan <- wrapMessage("floorReached", 0, "", ElevatorStatus.PreviousFloors[0])
-			}
+			//if StateOfShouldStop != 1 {
+			sendChan <- wrapMessage("floorReached", 0, "", ElevatorStatus.PreviousFloors[0])
+			//}
 			event_floorReached(StateOfShouldStop, doorTimerChan)
 			
 		case <- doorTimerChan:
