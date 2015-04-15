@@ -17,9 +17,9 @@ var (
 	timer2flag	bool = false
 )
 
-func ElevatorTimer(elevatorTimerChan chan int, timeoutChan chan int) {
+func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int) {
 	elevatorN := -1
-	go checkTimer(timeoutChan)
+	go checkTimer(elevatorTimeoutChan)
 	for {
 		select {
 		case elevatorN = <- elevatorTimerChan:
@@ -34,7 +34,7 @@ func ElevatorTimer(elevatorTimerChan chan int, timeoutChan chan int) {
 				timer2 = time.Now()
 				timer2flag = true
 			}
-		case elevatorN = <- timeoutChan:
+		case elevatorN = <- elevatorTimeoutChan:
 			elevatorTimerChan <- elevatorN
 		}
 	}

@@ -360,6 +360,7 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 		case elevatorN = <- elevatorTimerChan:
 			removeElevator(elevatorN)
 			PrintStatus(ElevatorStatus)
+			Println("JEG KOM IKKE HIT\n\n\nMEN HIT")
 		}
 	}
 }
@@ -415,6 +416,7 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	
 	for i:=0; i<numberOfElevators; i++ {
 		if costs[i] < int(cheapestCost) && ElevatorStatus.ActiveElevators[i] != "empty" {
+			cheapestCost = costs[i]
 			cheapestElevator = i
 		}
 	}
@@ -427,9 +429,9 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 
 // flytte til fsm?
 func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan chan int,
-					commandButtonChan chan int, floorChan chan int, /*ackTimerChan chan string,*/
-					receiveChan chan []byte, /*ackTimeoutChan chan string, ackResetChan chan string,*/
+					commandButtonChan chan int, floorChan chan int, receiveChan chan []byte,
 					doorTimerChan chan string) {
+	
 	var button			int
 	//var currentFloor	int
 	var chosenElevator	string
@@ -441,7 +443,6 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			//PrintStatus(ElevatorStatus)
 			
 			chosenElevator = ElevatorStatus.ActiveElevators[costFunction(button, 0)]
-			//ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 0, chosenElevator, button)
 			
 		case button = <- downButtonChan:
@@ -449,7 +450,6 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			//PrintStatus(ElevatorStatus)
 			
 			chosenElevator = ElevatorStatus.ActiveElevators[costFunction(button, 1)]
-			//ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 1, chosenElevator, button)
 			
 		case button = <- commandButtonChan:
@@ -465,13 +465,11 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			
 			elevator, floor, buttonType, MessageType := unwrapMessage(message)
 			
-			handleMessage(sendChan, /*ackResetChan,*/ doorTimerChan, elevator, floor, buttonType, MessageType)
+			handleMessage(sendChan, doorTimerChan, elevator, floor, buttonType, MessageType)
 			
 		case ElevatorStatus.PreviousFloors[0] = <- floorChan:
 			StateOfShouldStop := shouldStop()
-			//if StateOfShouldStop != 1 {
 			sendChan <- wrapMessage("floorReached", 0, "", ElevatorStatus.PreviousFloors[0])
-			//}
 			event_floorReached(StateOfShouldStop, doorTimerChan)
 			
 		case <- doorTimerChan:
