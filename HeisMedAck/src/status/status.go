@@ -143,9 +143,9 @@ func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, 
 		if currentPositionInReceivedStatus == -1 {
 			Println("received IP in message that i dont have myself")
 		} else {
-			//ElevatorStatus.PreviousFloors[i] = receivedStatus.PreviousFloors[currentPositionInReceivedStatus]
-			//ElevatorStatus.InFloor[i] = receivedStatus.InFloor[currentPositionInReceivedStatus]
-			//ElevatorStatus.Directions[i] = receivedStatus.Directions[currentPositionInReceivedStatus]
+			ElevatorStatus.PreviousFloors[i] = receivedStatus.PreviousFloors[currentPositionInReceivedStatus]
+			ElevatorStatus.InFloor[i] = receivedStatus.InFloor[currentPositionInReceivedStatus]
+			ElevatorStatus.Directions[i] = receivedStatus.Directions[currentPositionInReceivedStatus]
 			for j:=0; j<numberOfFloors; j++ {
 				ElevatorStatus.OrdersUp[i][j]	= ElevatorStatus.OrdersUp[i][j]	| receivedStatus.OrdersUp[currentPositionInReceivedStatus][j]
 				ElevatorStatus.OrdersDown[i][j] = ElevatorStatus.OrdersDown[i][j] | receivedStatus.OrdersDown[currentPositionInReceivedStatus][j]
@@ -323,7 +323,7 @@ func handleMessage(sendChan chan []byte, /*ackResetChan chan string,*/ doorTimer
 		
 		ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
 		//ElevatorStatus.InFloor[elevatorIPtoIndex(elevatorIP)] = receivedStatus.InFloor[currentPositionInReceivedStatus]
-		ElevatorStatus.Directions[elevatorIPtoIndex(elevatorIP)] = 
+		//ElevatorStatus.Directions[elevatorIPtoIndex(elevatorIP)] = 
 	case "orderCompleted":
 		Println("received orderCompleted")
 		
