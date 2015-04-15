@@ -290,34 +290,6 @@ func handleMessage(sendChan chan []byte, /*ackResetChan chan string,*/ doorTimer
 		//ElevatorStatus.Directions[elevatorIPtoIndex(elevatorIP)] = 
 	case "orderCompleted":
 		Println("received orderCompleted")
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		Println("elevatorIP in orderCompleted")
-		Println(elevatorIP)
-		Println("elevatorIP in orderCompleted2")
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
 		ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor]	= 0
 		ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 0
 		ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor]	= 0
@@ -439,13 +411,18 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 		}
 	}
 	cheapestElevator	= 0
-	cheapestCost		:= math.Inf(1)
+	cheapestCost		:= 10000
 	
 	for i:=0; i<numberOfElevators; i++ {
-		if costs[i] < int(cheapestCost) {
+		if costs[i] < int(cheapestCost) && ElevatorStatus.ActiveElevators[i] != "empty" {
+			cheapestCost = costs[i]
 			cheapestElevator = i
 		}
 	}
+	Printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nkostnader liste")
+	Println(costs)
+	Println(cheapestElevator)
+	Printf("======================================================\n\n\n\n\n\n\n\n\n")
 	return
 }
 
@@ -485,7 +462,7 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			
 
 		case message = <- receiveChan:
-			PrintStatus(ElevatorStatus)
+			//PrintStatus(ElevatorStatus)
 			
 			elevator, floor, buttonType, MessageType := unwrapMessage(message)
 			
