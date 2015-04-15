@@ -6,6 +6,7 @@ TODO:
 	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
 	bruke kun channels til /driver?
 	fjÆrn acktimer
+	Hvis tid, fiks generell unwrap som funker i CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNot() også
 	
 	spamme helt til acktimeout, ikke bare spamme 5 ganger
 	

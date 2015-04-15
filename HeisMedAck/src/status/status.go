@@ -171,37 +171,40 @@ func CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendCh
 			if err != nil {
 				Println(err)
 			}
-			var elevator int = -1
-			for i:=0; i<numberOfElevators; i++ {
-				if tempStatus.OrderedElevator == ElevatorStatus.ActiveElevators[i] {
-					elevator = i
-				}
-			}
-			buttonType 	:= tempStatus.OrderedButtonType
-			floor 		:= tempStatus.OrderedFloor
-			orderNotAddedFlag:= 0
-			if elevator != -1 {
-				switch(buttonType) {
-				case 0:
-					if ElevatorStatus.OrdersUp[elevator][floor] != 1 {
-						orderNotAddedFlag = 1
-					}
-				case 1:
-					if ElevatorStatus.OrdersDown[elevator][floor] != 1 {
-						orderNotAddedFlag = 1
-					}
-				case 2:
-					if ElevatorStatus.OrdersOut[elevator][floor] != 1 {
-						orderNotAddedFlag = 1
+			
+			if tempStatus.MessageType == "newOrder" {
+				var elevator int = -1
+				for i:=0; i<numberOfElevators; i++ {
+					if tempStatus.OrderedElevator == ElevatorStatus.ActiveElevators[i] {
+						elevator = i
 					}
 				}
-			} else {
-				orderNotAddedFlag = 1
-			}
+				buttonType 	:= tempStatus.OrderedButtonType
+				floor 		:= tempStatus.OrderedFloor
+				orderNotAddedFlag:= 0
+				if elevator != -1 {
+					switch(buttonType) {
+					case 0:
+						if ElevatorStatus.OrdersUp[elevator][floor] != 1 {
+							orderNotAddedFlag = 1
+						}
+					case 1:
+						if ElevatorStatus.OrdersDown[elevator][floor] != 1 {
+							orderNotAddedFlag = 1
+						}
+					case 2:
+						if ElevatorStatus.OrdersOut[elevator][floor] != 1 {
+							orderNotAddedFlag = 1
+						}
+					}
+				} else {
+					orderNotAddedFlag = 1
+				}
 	
-			if orderNotAddedFlag == 1 {
-				sendChan <- wrapMessage("newOrder", buttonType, ElevatorStatus.ActiveElevators[0], floor)
-			} 
+				if orderNotAddedFlag == 1 {
+					sendChan <- wrapMessage("newOrder", buttonType, ElevatorStatus.ActiveElevators[0], floor)
+				} 
+			}
 		}
 	}
 	
@@ -210,14 +213,14 @@ func CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendCh
 }
 
 //flytte til network?
-func handleMessage(sendChan chan []byte, ackResetChan chan string, doorTimerChan chan string, elevatorIP string, floor int, buttonType int, MessageType string){
+func handleMessage(sendChan chan []byte, /*ackResetChan chan string,*/ doorTimerChan chan string, elevatorIP string, floor int, buttonType int, MessageType string){
 	switch (MessageType) {
 	case "":
 		Println("json is eating the message, and shitting out an empty status")
 	case "ack":
 		//tenne lys!!!
 		Println("received ack")
-		ackResetChan <- "Reset acktimer"
+		//ackResetChan <- "Reset acktimer"
 		
 		var elevator int = -1
 		for i:=0; i<numberOfElevators; i++ {
@@ -274,12 +277,12 @@ func handleMessage(sendChan chan []byte, ackResetChan chan string, doorTimerChan
 		
 	case "floorReached":
 		Println("received floorReached")
-		//HER MÅ VI VEL HUSKE Å OPPDATERE PREVIOUS FLOORS I STATUS
+		ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
 	case "orderCompleted":
 		Println("received orderCompleted")
 		
 		ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor]	= 0
-		ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] 	= 0
+		ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 0
 		ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor]	= 0
 		driver.Set_button_lamp(0, floor, 0)
 		driver.Set_button_lamp(1, floor, 0)
@@ -410,8 +413,8 @@ func costFunction(floor int, buttonType int) int {
 
 // flytte til fsm?
 func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan chan int,
-					commandButtonChan chan int, floorChan chan int, ackTimerChan chan string,
-					receiveChan chan []byte, ackTimeoutChan chan string, ackResetChan chan string,
+					commandButtonChan chan int, floorChan chan int, /*ackTimerChan chan string,*/
+					receiveChan chan []byte, /*ackTimeoutChan chan string, ackResetChan chan string,*/
 					doorTimerChan chan string) {
 	var button			int
 	//var currentFloor	int
@@ -424,7 +427,7 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			//PrintStatus(ElevatorStatus)
 			
 			chosenElevator = ElevatorStatus.ActiveElevators[costFunction(button, 0)]
-			ackTimerChan <- "acktimer"
+			//ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 0, chosenElevator, button)
 			
 		case button = <- downButtonChan:
@@ -432,7 +435,7 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			//PrintStatus(ElevatorStatus)
 			
 			chosenElevator = ElevatorStatus.ActiveElevators[costFunction(button, 1)]
-			ackTimerChan <- "acktimer"
+			//ackTimerChan <- "acktimer"
 			sendChan <- wrapMessage("newOrder", 1, chosenElevator, button)
 			
 		case button = <- commandButtonChan:
@@ -448,19 +451,18 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			
 			elevator, floor, buttonType, MessageType := unwrapMessage(message)
 			
-			handleMessage(sendChan, ackResetChan, doorTimerChan, elevator, floor, buttonType, MessageType)
+			handleMessage(sendChan, /*ackResetChan,*/ doorTimerChan, elevator, floor, buttonType, MessageType)
 			
 		case ElevatorStatus.PreviousFloors[0] = <- floorChan:
 			StateOfShouldStop := shouldStop()
-			if StateOfShouldStop == 1 {
-				sendChan <- wrapMessage("orderCompleted", 0, "", ElevatorStatus.PreviousFloors[0])
-			} else {
-				sendChan <- wrapMessage("floorReached", 0, "", ElevatorStatus.PreviousFloors[0])
-			}
+			//if StateOfShouldStop != 1 {
+			sendChan <- wrapMessage("floorReached", 0, "", ElevatorStatus.PreviousFloors[0])
+			//}
 			event_floorReached(StateOfShouldStop, doorTimerChan)
 			
 		case <- doorTimerChan:
 			Printf("door timer finished\n")
+			sendChan <- wrapMessage("orderCompleted", 0, "", ElevatorStatus.PreviousFloors[0])
 			event_doorTimerOut()
 		}
 	}

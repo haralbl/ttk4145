@@ -25,9 +25,9 @@ func main() {
 	elevatorTimeoutChan		:= make(chan int)
 	doorTimerChan			:= make(chan string)
 	doorTimeoutChan			:= make(chan int)
-	ackTimerChan			:= make(chan string)
-	ackTimeoutChan			:= make(chan string)
-	ackResetChan			:= make(chan string)
+	//ackTimerChan			:= make(chan string)
+	//ackTimeoutChan			:= make(chan string)
+	//ackResetChan			:= make(chan string)
 	
 	doneChan				:= make(chan string)
 	initChan				:= make(chan string)
@@ -60,11 +60,11 @@ func main() {
 	
 	go timer.ElevatorTimer(elevatorTimerChan, elevatorTimeoutChan)
 	go timer.DoorTimer(doorTimerChan, doorTimeoutChan)
-	go timer.AckTimer(ackTimerChan, ackTimeoutChan, ackResetChan)
+	//go timer.AckTimer(ackTimerChan, ackTimeoutChan, ackResetChan)
 	
 	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan, sendChan)
 	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan,
-							ackTimerChan, receiveChan, ackTimeoutChan, ackResetChan,
+							/*ackTimerChan,*/ receiveChan, /*ackTimeoutChan, ackResetChan,*/
 							doorTimerChan)
 							
 	go status.CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendChan, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan)

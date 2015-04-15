@@ -67,7 +67,7 @@ func main() {
 							ackTimerChan, receiveChan, ackTimeoutChan, ackResetChan,
 							doorTimerChan)
 							
-	go status.CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendChan)
+	go status.CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendChan, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan)
 	
 	
 /*	

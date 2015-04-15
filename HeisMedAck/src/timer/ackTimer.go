@@ -1,5 +1,5 @@
 package timer
-
+/*
 import (
 	."fmt"
 	"time"
@@ -38,4 +38,4 @@ func checkAckTimer(ackTimeoutChan chan string) {
 		time.Sleep(10*time.Millisecond)
 	}
 }
-
+*/
