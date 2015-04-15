@@ -97,6 +97,7 @@ func PrintStatus(status structDefine.ElevatorStatus_t) {
 	Printf("\nOrderedFloor: %d\n\n", status.OrderedFloor)
 }
 
+
 func wrapMessage(newMessageType string, buttonType int, elevator string, floor int) []byte {
 	ElevatorStatus.MessageType			= newMessageType
 	ElevatorStatus.OrderedButtonType	= buttonType
@@ -110,9 +111,12 @@ func wrapMessage(newMessageType string, buttonType int, elevator string, floor i
 	return []byte(message)
 }
 
+
 func getMessageLength(message []byte) int {
 	return int(message[1000]) + int(message[1001])*10 + int(message[1002])*100
 }
+
+
 func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, MessageType string) {
 	
 	var receivedStatus structDefine.ElevatorStatus_t
@@ -129,7 +133,7 @@ func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, 
 	currentPositionInReceivedStatus := 0
 	
 	for i:=1; i<numberOfElevators; i++ {
-		currentIPtoUpdate = receivedStatus.ActiveElevators[i]
+		currentIPtoUpdate = ElevatorStatus.ActiveElevators[i]
 		currentPositionInReceivedStatus = -1
 		for j:=0; j<numberOfElevators; j++ {
 			if currentIPtoUpdate == receivedStatus.ActiveElevators[j] {
@@ -139,9 +143,9 @@ func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, 
 		if currentPositionInReceivedStatus == -1 {
 			Println("received IP in message that i dont have myself")
 		} else {
-			ElevatorStatus.PreviousFloors[i] = receivedStatus.PreviousFloors[currentPositionInReceivedStatus]
-			ElevatorStatus.InFloor[i] = receivedStatus.InFloor[currentPositionInReceivedStatus]
-			ElevatorStatus.Directions[i] = receivedStatus.Directions[currentPositionInReceivedStatus]
+			//ElevatorStatus.PreviousFloors[i] = receivedStatus.PreviousFloors[currentPositionInReceivedStatus]
+			//ElevatorStatus.InFloor[i] = receivedStatus.InFloor[currentPositionInReceivedStatus]
+			//ElevatorStatus.Directions[i] = receivedStatus.Directions[currentPositionInReceivedStatus]
 			for j:=0; j<numberOfFloors; j++ {
 				ElevatorStatus.OrdersUp[i][j]	= ElevatorStatus.OrdersUp[i][j]	| receivedStatus.OrdersUp[currentPositionInReceivedStatus][j]
 				ElevatorStatus.OrdersDown[i][j] = ElevatorStatus.OrdersDown[i][j] | receivedStatus.OrdersDown[currentPositionInReceivedStatus][j]
@@ -155,6 +159,42 @@ func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, 
 	buttonType	= receivedStatus.OrderedButtonType
 	
 	//Printf("msgtype: %s\nelevator: %s\nfloor: %d\nbuttonType: %d\n", MessageType, elevator, floor, buttonType)
+	
+	
+	/*
+	// update status
+	currentIPtoUpdate		:= ""
+	currentPositionInReceivedStatus := 0
+	
+	for i:=1; i<numberOfElevators; i++ {
+		currentIPtoUpdate = receivedStatus.ActiveElevators[i]
+		currentPositionInReceivedStatus = -1
+		for j:=0; j<numberOfElevators; j++ {
+			if currentIPtoUpdate == receivedStatus.ActiveElevators[j] {
+				currentPositionInReceivedStatus = j
+			}
+		}
+		if currentPositionInReceivedStatus == -1 {
+			Println("received IP in message that i dont have myself")
+		} else {
+			//ElevatorStatus.PreviousFloors[i] = receivedStatus.PreviousFloors[currentPositionInReceivedStatus]
+			//ElevatorStatus.InFloor[i] = receivedStatus.InFloor[currentPositionInReceivedStatus]
+			//ElevatorStatus.Directions[i] = receivedStatus.Directions[currentPositionInReceivedStatus]
+			for j:=0; j<numberOfFloors; j++ {
+				ElevatorStatus.OrdersUp[i][j]	= ElevatorStatus.OrdersUp[i][j]	| receivedStatus.OrdersUp[currentPositionInReceivedStatus][j]
+				ElevatorStatus.OrdersDown[i][j] = ElevatorStatus.OrdersDown[i][j] | receivedStatus.OrdersDown[currentPositionInReceivedStatus][j]
+				ElevatorStatus.OrdersOut[i][j]	= ElevatorStatus.OrdersOut[i][j] | receivedStatus.OrdersOut[currentPositionInReceivedStatus][j]
+			}
+		}
+	}
+	MessageType	= receivedStatus.MessageType
+	elevator	= receivedStatus.OrderedElevator
+	floor		= receivedStatus.OrderedFloor
+	buttonType	= receivedStatus.OrderedButtonType
+	*/
+	
+	
+	
 	
 	return
 }
@@ -202,6 +242,7 @@ func CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendCh
 				}
 	
 				if orderNotAddedFlag == 1 {
+					Println("her er jeg")
 					sendChan <- wrapMessage("newOrder", buttonType, ElevatorStatus.ActiveElevators[0], floor)
 				} 
 			}
@@ -220,7 +261,6 @@ func handleMessage(sendChan chan []byte, /*ackResetChan chan string,*/ doorTimer
 	case "ack":
 		//tenne lys!!!
 		Println("received ack")
-		//ackResetChan <- "Reset acktimer"
 		
 		var elevator int = -1
 		for i:=0; i<numberOfElevators; i++ {
@@ -236,8 +276,10 @@ func handleMessage(sendChan chan []byte, /*ackResetChan chan string,*/ doorTimer
 		switch(buttonType) {
 		case 0:
 			ElevatorStatus.OrdersUp[elevator][floor] = 1
+			driver.Set_button_lamp(buttonType, floor, 1)
 		case 1:
 			ElevatorStatus.OrdersDown[elevator][floor] = 1
+			driver.Set_button_lamp(buttonType, floor, 1)
 		case 2:
 			ElevatorStatus.OrdersOut[elevator][floor] = 1
 		}
@@ -278,6 +320,10 @@ func handleMessage(sendChan chan []byte, /*ackResetChan chan string,*/ doorTimer
 	case "floorReached":
 		Println("received floorReached")
 		//ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
+		
+		ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
+		//ElevatorStatus.InFloor[elevatorIPtoIndex(elevatorIP)] = receivedStatus.InFloor[currentPositionInReceivedStatus]
+		ElevatorStatus.Directions[elevatorIPtoIndex(elevatorIP)] = 
 	case "orderCompleted":
 		Println("received orderCompleted")
 		
@@ -350,6 +396,7 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 			elevatorTimerChan <- elevatorN
 		case elevatorN = <- elevatorTimerChan:
 			removeElevator(elevatorN)
+			PrintStatus(ElevatorStatus)
 		}
 	}
 }
