@@ -361,6 +361,29 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 			removeElevator(elevatorN)
 			PrintStatus(ElevatorStatus)
 			Println("JEG KOM IKKE HIT\n\n\nMEN HIT")
+			
+			var lowestIPindex = 0
+			var lowestIP = ElevatorStatus.ActiveElevators[0]
+			for i:=0; i<numberOfElevators; i++ {
+				if ElevatorStatus.ActiveElevators[i] < lowestIP {
+					lowestIP = ElevatorStatus.ActiveElevators[i]
+					lowestIPindex = i
+				}
+			}	
+			for i:=0; i<numberOfFloors; i++ {
+				if ElevatorStatus.OrdersUp[elevatorN][i] == 1	{
+					if lowestIPindex == 0 {
+						sendChan <- wrapMessage("newOrder", 0, lowestIP, i)
+					}
+					ElevatorStatus.OrdersUp[elevatorN][i] = 0
+				}
+				if ElevatorStatus.OrdersDown[elevatorN][i] == 1	{
+					if lowestIPindex == 0 {
+						sendChan <- wrapMessage("newOrder", 1, lowestIP, i)
+					}
+					ElevatorStatus.OrdersDown[elevatorN][i] = 0
+				}
+			}
 		}
 	}
 }
@@ -461,7 +484,7 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 			
 
 		case message = <- receiveChan:
-			//PrintStatus(ElevatorStatus)
+			PrintStatus(ElevatorStatus)
 			
 			elevator, floor, buttonType, MessageType := unwrapMessage(message)
 			
