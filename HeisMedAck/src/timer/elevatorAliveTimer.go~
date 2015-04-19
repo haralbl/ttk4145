@@ -8,6 +8,7 @@ import (
 const (
 	timeUntilTimeout = 700*time.Millisecond
 )
+
 var (
 	timer0		time.Time
 	timer1		time.Time
@@ -17,9 +18,11 @@ var (
 	timer2flag	bool = false
 )
 
-func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int) {
+func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int)
+{
 	elevatorN := -1
 	go checkTimer(elevatorTimeoutChan)
+	
 	for {
 		select {
 		case elevatorN = <- elevatorTimerChan:
@@ -45,17 +48,17 @@ func checkTimer(elevatorTimeoutChan chan int) {
 		if (int64(time.Since(timer0)) > int64(timeUntilTimeout)) && (timer0flag == true) {
 			timer0flag = false
 			elevatorTimeoutChan <- 0
-			Println("								timer 0 timeout")
+			Println("timer 0 timeout")
 		}
 		if (int64(time.Since(timer1)) > int64(timeUntilTimeout)) && (timer1flag == true) {
 			timer1flag = false
 			elevatorTimeoutChan <- 1
-			Println("								timer 1 timeout")
+			Println("timer 1 timeout")
 		}
 		if (int64(time.Since(timer2)) > int64(timeUntilTimeout)) && (timer2flag == true) {
 			timer2flag = false
 			elevatorTimeoutChan <- 2
-			Println("								timer 2 timeout")
+			Println("timer 2 timeout")
 		}
 		time.Sleep(10*time.Millisecond)
 	}

@@ -4,9 +4,6 @@ import (
 	."fmt"
 	"net"
 	"time"
-	//"status"
-	//"structDefine"
-	//"encoding/json"
 )
 
 const (
@@ -25,9 +22,9 @@ func SendManager(sendChan chan []byte, checkIfOrderIsAddedToQueueAndPotentiallyT
 }
 
 func send(data []byte, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan chan []byte) {
-	BROADCAST_IPv4 := net.IPv4(129, 241, 187, 255)
-	port := 58017
-	socket, err := net.DialUDP("udp4", nil, &net.UDPAddr{
+	BROADCAST_IPv4	:= net.IPv4(129, 241, 187, 255)
+	port			:= 58017
+	socket, err		:= net.DialUDP("udp4", nil, &net.UDPAddr{
 		IP: BROADCAST_IPv4,
 		Port: port,
 	})
@@ -36,6 +33,7 @@ func send(data []byte, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMysel
 	}
 	for i:=0; i<numberOfRetries; i++ {
 		_, err := socket.Write(data)
+		
 		if err != nil {
 			Printf("error Send 2")
 		}
@@ -44,38 +42,39 @@ func send(data []byte, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMysel
 	checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan <- data
 }
 
-func Receive(receiveChan chan []byte){
-	addr, _ := net.ResolveUDPAddr("udp4", ":58017")
+func Receive(receiveChan chan []byte) {
+	addr, _		:= net.ResolveUDPAddr("udp4", ":58017")
 	socket, err := net.ListenUDP("udp4", addr)
-	//var ReceivedStatus structDefine.ElevatorStatus_t
+
 	if err != nil {
-		Printf("error Receive 1")}
-	
+		Printf("error Receive 1")
+	}
 	for {
-		data := make([]byte, 1024)
-		length,_,err := socket.ReadFromUDP(data)
+		data			:= make([]byte, 1024)
+		length, _, err	:= socket.ReadFromUDP(data)
 		
 		data[1000] = byte(length%10)
 		data[1001] = byte((length/10)%10)
 		data[1002] = byte((length/100)%10)
 
 		lastMsgLength = length
-		/*messageLengthChan <- msgLength*/
-		if err != nil {
-			Printf("error Receive 2")}
-		//println("hola señor")
-		//println(string(data[:4096]))
 
-		//json.Unmarshal(data, &ReceivedStatus)
-		//receiveChan <- ReceivedStatus
+		if err != nil {
+			Printf("error Receive 2")
+		}
 		receiveChan <- data
 	}
 }
 
-/*
-func GetLastMsgLength() int { //sanntidskrav som gir potensiale for fuckup
-	return lastMsgLength
-}
-*/
+
+
+
+
+
+
+
+
+
+
 
 

@@ -1,5 +1,6 @@
 #!/bin/bash
 
-export GOROOT=/usr/lib/go
-export GOPATH=$HOME/ttk4145/Heis
+export GOPATH=$HOME/ttk4145/HeisMedAck
+
+go install main.go
 go run main.go

@@ -5,7 +5,8 @@ const (
 	numberOfFloors		= 4
 )
 
-type ElevatorStatus_t struct {
+type ElevatorStatus_t struct
+{
 	ActiveElevators		[numberOfElevators]string // IP addresses
  
 	PreviousFloors		[numberOfElevators]int

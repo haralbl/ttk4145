@@ -6,10 +6,9 @@ import(
 	"time"
 )
 
-
 type direction int
 
-const(
+const (
 	NFloors 			int = 4
 	NButtonTypes 		int = 3
 
@@ -22,7 +21,7 @@ const(
     	STOP direction		= 0
 )
 
-var(
+var (
 	lamp_channel_matrix [NFloors][NButtonTypes] int = [NFloors][NButtonTypes]int{
 	    {LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
 	    {LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
@@ -39,9 +38,7 @@ var(
 	}
 )
 
-
-
-func Init() int{
+func Init() int {
 	fmt.Printf("I'm running driver\n")
 	initStat := Io_init()
 	
@@ -67,7 +64,6 @@ func Init() int{
 	
     // Return success.
     return 1
-
 }
 
 func UpButtonPoller(upButtonChan chan int) {
@@ -129,7 +125,7 @@ func CommandButtonPoller(commandButtonChan chan int) {
 	}
 }
 
-func FloorPoller(floorChan chan int) { 
+func FloorPoller(floorChan chan int) {
 	floorPollerFlag := 0 
 	currFloor := -1 
 	for { 
@@ -168,8 +164,8 @@ func Set_door_open_lamp(value int) {
     }
 }
 
- func get_obstruction_signal() int {
-    return io_read_bit(OBSTRUCTION)
+func get_obstruction_signal() int {
+	return io_read_bit(OBSTRUCTION)
 }
 
 func Get_stop_signal() int {
@@ -184,7 +180,7 @@ func set_stop_lamp(value int) {
     }
 }
 
-func Get_floor_sensor_signal() int{
+func Get_floor_sensor_signal() int {
     if io_read_bit(SENSOR_FLOOR1) != 0 {
         return 0
     } else if io_read_bit(SENSOR_FLOOR2) != 0 {
@@ -216,7 +212,7 @@ func Set_floor_indicator(floor int) {
     }
 }
 
-func get_button_signal(button int,floor int) int{
+func get_button_signal(button int,floor int) int {
     if floor < 0 || floor >= NFloors {
         fmt.Printf("reading button on invalid floor")
     }
@@ -254,3 +250,16 @@ func Set_button_lamp(button int, floor int, value int) {
         io_clear_bit(lamp_channel_matrix[floor][button])
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
