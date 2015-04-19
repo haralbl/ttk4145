@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	timeUntilTimeout = 300*time.Millisecond
+	timeUntilTimeout = 700*time.Millisecond
 )
 var (
 	timer0		time.Time
@@ -19,7 +19,7 @@ var (
 
 func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int) {
 	elevatorN := -1
-	go checkTimer(timeoutChan)
+	go checkTimer(elevatorTimeoutChan)
 	for {
 		select {
 		case elevatorN = <- elevatorTimerChan:

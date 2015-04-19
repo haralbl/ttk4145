@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	timeUntilTimeout = 300*time.Millisecond
+	timeUntilTimeout = 700*time.Millisecond
 )
 var (
 	timer0		time.Time

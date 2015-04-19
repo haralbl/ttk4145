@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	numberOfRetries int = 5
+	numberOfRetries int = 3
 )
 
 var (
@@ -54,6 +54,7 @@ func Receive(receiveChan chan []byte){
 	for {
 		data := make([]byte, 1024)
 		length,_,err := socket.ReadFromUDP(data)
+		
 		data[1000] = byte(length%10)
 		data[1001] = byte((length/10)%10)
 		data[1002] = byte((length/100)%10)
