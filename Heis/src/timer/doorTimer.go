@@ -16,6 +16,7 @@ var (
 
 func DoorTimer(doorTimerChan chan string, doorTimeoutChan chan int) {
 	go checkDoorTimer(doorTimeoutChan)
+	
 	for {
 		select {
 		case <- doorTimerChan:
@@ -30,15 +31,19 @@ func DoorTimer(doorTimerChan chan string, doorTimeoutChan chan int) {
 
 func checkDoorTimer(doorTimeoutChan chan int) {
 	for {
-		
 		if (int64(time.Since(doorTimer)) > int64(doorOpenTime)) && (doorTimerFlag == true) {
 			doorTimerFlag = false
 			doorTimeoutChan <- 0
-			Println("				doorTimer timeout")
+			Println("doorTimer timeout")
 		}
 		time.Sleep(100*time.Millisecond)
 	}
 }
+
+
+
+
+
 
 
 

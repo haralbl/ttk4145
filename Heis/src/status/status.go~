@@ -2,13 +2,11 @@ package status
 
 import (
 	."fmt"
-	"strings"
-	"strconv"
 	"network"
 	"math"
 	"driver"
-	//"time"
-	//"./Timer"
+	"encoding/json"
+	"structDefine"
 )
 
 const (
@@ -25,184 +23,216 @@ const (
 )
 
 var (
-	activeElevators		[numberOfElevators]string // IP addresses
-	
-	previousFloors		[numberOfElevators]int
-	inFloor				[numberOfElevators]int
-	directions			[numberOfElevators]int
-	
-	ordersUp			[numberOfElevators][numberOfFloors]int
-	ordersDown			[numberOfElevators][numberOfFloors]int
-	ordersOut			[numberOfElevators][numberOfFloors]int
-	
-	state				int
+	ElevatorStatus structDefine.ElevatorStatus_t
 )
 
-func wrapMessage(messageType string, buttonType int, elevator int, floor int) (message string) {
-	message = ""
-	message += messageType + "\n"
+func Initialize(initChan chan string, floorChan chan int) {	
+	for i:=0; i<numberOfElevators; i++ {
+		ElevatorStatus.ActiveElevators[i] = "empty"
+	} 
+	ElevatorStatus.ActiveElevators[0] = network.GetLocalIP()
+	driver.Set_motor_direction(DOWN)
 	
-	var newOrderUp		[numberOfElevators][numberOfFloors]int
-	var newOrderDown	[numberOfElevators][numberOfFloors]int
-	var newOrderOut		[numberOfElevators][numberOfFloors]int
-	switch buttonType {
-	case 0:
-		newOrderUp[elevator][floor] = 1
-	case 1:
-		newOrderDown[elevator][floor] = 1
-	case 2:
-		newOrderOut[elevator][floor] = 1
-	}
-	for i:=0; i<numberOfElevators; i++ {
-		for j:=0; j<numberOfFloors; j++ {
-			message += strconv.Itoa(newOrderUp[i][j])
-			message += " "
-			message += strconv.Itoa(newOrderDown[i][j])
-			message += " "
-			message += strconv.Itoa(newOrderOut[i][j])
-			message += " "
+	for {
+		select {
+		case ElevatorStatus.PreviousFloors[0] = <- floorChan:
+			driver.Set_floor_indicator(ElevatorStatus.PreviousFloors[0])
+			if ElevatorStatus.PreviousFloors[0] == 0 {
+				driver.Set_motor_direction(STOP)
+				ElevatorStatus.State = IDLE
+				initChan <- "Finished init"
+				return
+			}
 		}
-		message += "\n"
+	}
+}
+
+func PrintStatus(status structDefine.ElevatorStatus_t) {
+	Printf("Active elevators: %s, %s, %s\n", status.ActiveElevators[0],	status.ActiveElevators[1],	status.ActiveElevators[2])
+	Printf("PreviousFloors:	  %d, %d, %d\n", status.PreviousFloors[0],	status.PreviousFloors[1],	status.PreviousFloors[2])
+	Printf("InFloor:		  %d, %d, %d\n", status.InFloor[0],			status.InFloor[1],			status.InFloor[2])
+	Printf("Directions:		  %d, %d, %d\n", status.Directions[0],		status.Directions[1],		status.Directions[2])
+	
+	Printf("\nElevator0\nOrdersUp	OrdersDown	OrdersOut\n")
+	for i:=0; i<numberOfFloors; i++ {
+		Printf("%d		%d		%d\n", status.OrdersUp[0][i], status.OrdersDown[0][i], status.OrdersOut[0][i])
 	}
 	
-	for i:=0; i<numberOfElevators; i++ {
-		message += activeElevators[i]
-		message += " "
+	Printf("\nElevator1\nOrdersUp	OrdersDown	OrdersOut\n")
+	for i:=0; i<numberOfFloors; i++ {
+		Printf("%d		%d		%d\n", status.OrdersUp[1][i], status.OrdersDown[1][i], status.OrdersOut[1][i])	
 	}
-	message += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		message += strconv.Itoa(previousFloors[i])
-		message += " "
+	
+	Printf("\nElevator2\nOrdersUp	OrdersDown	OrdersOut\n")
+	for i:=0; i<numberOfFloors; i++ {
+		Printf("%d		%d		%d\n", status.OrdersUp[2][i], status.OrdersDown[2][i], status.OrdersOut[2][i])	
 	}
-	message += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		message += strconv.Itoa(inFloor[i])
-		message += " "
+		
+	Printf("\nStatus:				%d",	 status.State)				
+	Printf("\nMessageType:			%s",	 status.MessageType)
+	Printf("\nOrderedButtonType:	%d",	 status.OrderedButtonType)	
+	Printf("\nOrderedElevator:		%s", 	 status.OrderedElevator)		
+	Printf("\nOrderedFloor:			%d\n\n", status.OrderedFloor)
+}
+
+
+func wrapMessage(newMessageType string, buttonType int, elevator string, floor int) []byte {
+	ElevatorStatus.MessageType			= newMessageType
+	ElevatorStatus.OrderedButtonType	= buttonType
+	ElevatorStatus.OrderedElevator		= elevator
+	ElevatorStatus.OrderedFloor			= floor
+	
+	message := make([]byte, 1024)
+	message,_ = json.Marshal(ElevatorStatus)
+	
+	return []byte(message)
+}
+
+func getMessageLength(message []byte) int {
+	return int(message[1000]) + int(message[1001])*10 + int(message[1002])*100
+}
+
+func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, MessageType string) {
+	var receivedStatus structDefine.ElevatorStatus_t
+	err := json.Unmarshal(message[0:getMessageLength(message)], &receivedStatus)
+	if err != nil {
+		Println(err)
 	}
-	message += "\n"
+	
+	currentIPtoUpdate				:= ""
+	currentPositionInReceivedStatus := 0
+	
 	for i:=0; i<numberOfElevators; i++ {
-		message += strconv.Itoa(inFloor[i])
-		message += " "
-	}
-	message += "\n"
-	for i:=0; i<numberOfElevators; i++ {
-		for j:=0; j<numberOfFloors; j++ {
-			message += strconv.Itoa(ordersUp[i][j])
-			message += " "
-			message += strconv.Itoa(ordersDown[i][j])
-			message += " "
-			message += strconv.Itoa(ordersOut[i][j])
-			message += " "
+		currentIPtoUpdate = ElevatorStatus.ActiveElevators[i]
+		currentPositionInReceivedStatus = -1
+		for j:=0; j<numberOfElevators; j++ {
+			if currentIPtoUpdate == receivedStatus.ActiveElevators[j] {
+				currentPositionInReceivedStatus = j
+			}
 		}
-		message += "\n"
+		if currentPositionInReceivedStatus == -1 {
+			Println("received IP in message that i dont have myself")
+
+		} else {
+			if receivedStatus.ActiveElevators[currentPositionInReceivedStatus] != ElevatorStatus.ActiveElevators[0]{
+				ElevatorStatus.PreviousFloors[i] = receivedStatus.PreviousFloors[currentPositionInReceivedStatus]
+				ElevatorStatus.InFloor[i] = receivedStatus.InFloor[currentPositionInReceivedStatus]
+				ElevatorStatus.Directions[i] = receivedStatus.Directions[currentPositionInReceivedStatus]
+			}
+			for j:=0; j<numberOfFloors; j++ {
+				ElevatorStatus.OrdersUp[i][j]	= ElevatorStatus.OrdersUp[i][j]	| receivedStatus.OrdersUp[currentPositionInReceivedStatus][j]
+				ElevatorStatus.OrdersDown[i][j] = ElevatorStatus.OrdersDown[i][j] | receivedStatus.OrdersDown[currentPositionInReceivedStatus][j]
+				ElevatorStatus.OrdersOut[i][j]	= ElevatorStatus.OrdersOut[i][j] | receivedStatus.OrdersOut[currentPositionInReceivedStatus][j]
+			}
+		}
 	}
+	MessageType	= receivedStatus.MessageType
+	elevator	= receivedStatus.OrderedElevator
+	floor		= receivedStatus.OrderedFloor
+	buttonType	= receivedStatus.OrderedButtonType
+	
 	return
 }
 
-func unwrapMessage(message string) (elevator int, floor int, buttonType int, order int, messageType string){
-	statusFields := strings.Split(message, "\n")
-	
-	// update status
-	temp := 0
-	field := strings.Split(statusFields[5], " ")
-	for i:=1; i<numberOfElevators; i++ {
-		temp,_	= strconv.Atoi(field[i])
-		previousFloors[i] = temp
-	}
-	field = strings.Split(statusFields[6], " ")
-	for i:=1; i<numberOfElevators; i++ {
-		temp,_		= strconv.Atoi(field[i])
-		inFloor[i] = temp
-	}
-	field = strings.Split(statusFields[7], " ")
-	for i:=1; i<numberOfElevators; i++ {
-		temp,_		= strconv.Atoi(field[i])
-		directions[i] = temp
-	}
-	for i:=0; i<numberOfElevators; i++ {
-		field = strings.Split(statusFields[8+i], " ")
-		for j:=0; j<numberOfFloors; j++ {
-			temp,_	= strconv.Atoi(field[3*j+0])
-			ordersUp[i][j] = ordersUp[i][j] | temp
-			temp,_	= strconv.Atoi(field[3*j+1])
-			ordersDown[i][j] = ordersDown[i][j] | temp
-			temp,_	= strconv.Atoi(field[3*j+2])
-			ordersOut[i][j] = ordersOut[i][j] | temp
-		}
-	}
-	
-	// add new info to status
-	messageType = statusFields[0]
-	
-	for i:=0; i<numberOfElevators; i++ {
-		field = strings.Split(statusFields[1+i], " ")
-		for j:=0; j<numberOfFloors; j++ {
-			order,_ = strconv.Atoi(field[3*j+0])
-			if order == 1 {
-				elevator = i
-				floor = j
-				buttonType = 0
+func CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendChan chan []byte, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan chan []byte) {
+	var data []byte
+	for {
+		select {
+		case data = <- checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan:
+			var tempStatus structDefine.ElevatorStatus_t
+			err := json.Unmarshal(data[0:len(data)], &tempStatus)
+			if err != nil {
+				Println(err)
 			}
-			order,_ = strconv.Atoi(field[3*j+1])
-			if order == 1 {
-				elevator = i
-				floor = j
-				buttonType = 1
-			}
-			order,_ = strconv.Atoi(field[3*j+2])
-			if order == 1 {
-				elevator = i
-				floor = j
-				buttonType = 2
+			
+			if tempStatus.MessageType == "newOrder" {
+				var elevator int = -1
+				for i:=0; i<numberOfElevators; i++ {
+					if tempStatus.OrderedElevator == ElevatorStatus.ActiveElevators[i] {
+						elevator = i
+					}
+				}
+				buttonType 	:= tempStatus.OrderedButtonType
+				floor 		:= tempStatus.OrderedFloor
+				orderNotAddedFlag := 0
+				
+				if elevator != -1 {
+					switch(buttonType) {
+					case 0:
+						if ElevatorStatus.OrdersUp[elevator][floor] != 1 {
+							orderNotAddedFlag = 1
+						}
+					case 1:
+						if ElevatorStatus.OrdersDown[elevator][floor] != 1 {
+							orderNotAddedFlag = 1
+						}
+					case 2:
+						if ElevatorStatus.OrdersOut[elevator][floor] != 1 {
+							orderNotAddedFlag = 1
+						}
+					}
+				} else {
+					orderNotAddedFlag = 1
+				}
+				if orderNotAddedFlag == 1 {
+					Println("her er jeg")
+					sendChan <- wrapMessage("newOrder", buttonType, ElevatorStatus.ActiveElevators[0], floor)
+				} 
 			}
 		}
 	}
-	
-	// sjekk opp mot IP liste i message
-	ipList := strings.Split(statusFields[4], " ")
-	elevatorIP := ipList[elevator]
-	for i:= 0; i<numberOfElevators; i++{
-		if activeElevators[i] == elevatorIP {
-			elevator = i
-		}
-	}
-	return
 }
 
-func handleMessage(sendChan chan string, doorTimerChan chan string, elevator int, floor int, buttonType int, order int, messageType string){
-	switch (messageType) {
+func handleMessage(sendChan chan []byte, doorTimerChan chan string, elevatorIP string, floor int, buttonType int, MessageType string) {
+	switch (MessageType) {
+	case "":
+		Println("json is eating the message, and shitting out an empty status")
 	case "ack":
 		Println("received ack")
 		
-		//reset ack timer?
-		// legge til ordre du ikke selv skal ta
-		//sette knappelys hvis ikke du tar ordren selv
+		var elevator int = -1
+		for i:=0; i<numberOfElevators; i++ {
+			if elevatorIP == ElevatorStatus.ActiveElevators[i] {
+				elevator = i
+			}
+		}
+		if elevator == -1 {
+			Println("It appears to be a fuckup in handlemessage() > case ack. I will take it myself.")
+			elevator = 0
+		}
+		
+		switch(buttonType) {
+		case 0:
+			ElevatorStatus.OrdersUp[elevator][floor] = 1
+			driver.Set_button_lamp(buttonType, floor, 1)
+		case 1:
+			ElevatorStatus.OrdersDown[elevator][floor] = 1
+			driver.Set_button_lamp(buttonType, floor, 1)
+		case 2:
+			ElevatorStatus.OrdersOut[elevator][floor] = 1
+		}
 		
 	case "newOrder":
-		if elevator == 0{
+		if elevatorIP == ElevatorStatus.ActiveElevators[0] {
 			Println("received new order to handle myself")
 			
 			driver.Set_button_lamp(buttonType, floor, 1)
-		
-			sendChan <- wrapMessage("ack", buttonType, elevator, floor)
+			sendChan <- wrapMessage("ack", buttonType, elevatorIP, floor)
 		
 			switch (buttonType) {
 			case 0:
-				if ordersUp[elevator][floor] == 0 {
-					sendChan <- wrapMessage("ack", buttonType, elevator, floor)
-					ordersUp[elevator][floor] = 1
+				if ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
+					ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor] = 1
 					event_newOrder(sendChan, doorTimerChan)
 				}
 			case 1:
-				if ordersDown[elevator][floor] == 0 {
-					sendChan <- wrapMessage("ack", buttonType, elevator, floor)
-					ordersDown[elevator][floor] = 1
+				if ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
+					ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 1
 					event_newOrder(sendChan, doorTimerChan)
 				}
 			case 2:
-				if ordersDown[elevator][floor] == 0 {
-					sendChan <- wrapMessage("ack", buttonType, elevator, floor)
-					ordersOut[elevator][floor] = 1
+				if ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
+					ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor] = 1
 					event_newOrder(sendChan, doorTimerChan)
 				}
 			}
@@ -210,46 +240,51 @@ func handleMessage(sendChan chan string, doorTimerChan chan string, elevator int
 		
 	case "floorReached":
 		Println("received floorReached")
+		//ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
 		
+		//ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
+		//ElevatorStatus.InFloor[elevatorIPtoIndex(elevatorIP)] = receivedStatus.InFloor[currentPositionInReceivedStatus]
+		//ElevatorStatus.Directions[elevatorIPtoIndex(elevatorIP)] = 
 	case "orderCompleted":
 		Println("received orderCompleted")
-		
-		ordersUp[elevator][floor]		= 0
-		ordersDown[elevator][floor] 	= 0
-		ordersOut[elevator][floor]		= 0
+		ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor]	= 0
+		ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 0
+		ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor]	= 0
 		driver.Set_button_lamp(0, floor, 0)
 		driver.Set_button_lamp(1, floor, 0)
 		driver.Set_button_lamp(2, floor, 0)
 	case "updateAwokenElevator":
 		Println("received updateAwokenElevator")
-	}
-}
-
-func Initialize(initChan chan string, floorChan chan int) {
-	for i:=0; i<numberOfElevators; i++ {
-		activeElevators[i] = "empty"
-	} 
-	activeElevators[0] = network.GetLocalIP()
-	
-	driver.Set_motor_direction(DOWN)
-	for {
-		select {
-		case previousFloors[0] = <- floorChan:
-			driver.Set_floor_indicator(previousFloors[0])
-			if previousFloors[0] == 0 {
-				driver.Set_motor_direction(STOP)
-				initChan <- "Finished init"
-				return
-				Println("init goFunc not exited")
+		for floor:=0; floor<numberOfFloors; floor++ {
+			if ElevatorStatus.OrdersUp[0][floor] == 1 {
+				driver.Set_button_lamp(0, floor, 1)
+				event_newOrder(sendChan, doorTimerChan)
+			}
+			if ElevatorStatus.OrdersDown[0][floor] == 1 {
+				driver.Set_button_lamp(1, floor, 1)
+				event_newOrder(sendChan, doorTimerChan)
+			}
+			if ElevatorStatus.OrdersOut[0][floor] == 1 {
+				driver.Set_button_lamp(2, floor, 1)
+				event_newOrder(sendChan, doorTimerChan)
 			}
 		}
 	}
-	state = IDLE
+}
+
+func elevatorIPtoIndex(elevatorIP string) (elevatorIndex int) {
+	elevatorIndex = 0
+	for i:=0; i<numberOfElevators; i++ {
+		if elevatorIP == ElevatorStatus.ActiveElevators[i] {
+			elevatorIndex = i
+		}
+	}
+	return
 }
 
 func isElevatorInList(elevatorIP string) int {
 	for i:=0; i<numberOfElevators; i++ {
-		if activeElevators[i] == elevatorIP {
+		if ElevatorStatus.ActiveElevators[i] == elevatorIP {
 			return i
 		}
 	}
@@ -261,26 +296,26 @@ func addElevator(elevatorIP string) int {
 	full			:= true
 	nextIndex		:= 0
 	for i:=numberOfElevators-1; i>-1; i-- {
-		if activeElevators[i] == elevatorIP {
+		if ElevatorStatus.ActiveElevators[i] == elevatorIP {
 			alreadyAdded = true
 		}
-		if activeElevators[i] == "empty" {
+		if ElevatorStatus.ActiveElevators[i] == "empty" {
 			full = false
 			nextIndex = i
 		}
 	}
 	if !alreadyAdded && !full {
-		activeElevators[nextIndex] = elevatorIP
+		ElevatorStatus.ActiveElevators[nextIndex] = elevatorIP
 		return nextIndex
 	}
 	return -1
 }		
 
 func removeElevator(elevatorN int) {
-	activeElevators[elevatorN] = "empty"
+	ElevatorStatus.ActiveElevators[elevatorN] = "empty"
 }
 
-func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan chan int, sendChan, chan string) {
+func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan chan int, sendChan chan []byte) {
 	var elevatorIP	string
 	var elevatorN	int
 	for {
@@ -290,11 +325,34 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 			elevatorN = isElevatorInList(elevatorIP)
 			if elevatorN == -1 {
 				elevatorN = addElevator(elevatorIP)
-				sendChan <- wrapMessage("updateAwokenElevator", 0, 0, 0)
+				sendChan <- wrapMessage("updateAwokenElevator", 0, "", 0)
 			}
 			elevatorTimerChan <- elevatorN
+			
 		case elevatorN = <- elevatorTimerChan:
 			removeElevator(elevatorN)
+			var lowestIPindex = 0
+			var lowestIP = ElevatorStatus.ActiveElevators[0]
+			for i:=0; i<numberOfElevators; i++ {
+				if ElevatorStatus.ActiveElevators[i] < lowestIP {
+					lowestIP = ElevatorStatus.ActiveElevators[i]
+					lowestIPindex = i
+				}
+			}	
+			for i:=0; i<numberOfFloors; i++ {
+				if ElevatorStatus.OrdersUp[elevatorN][i] == 1	{
+					if lowestIPindex == 0 {
+						sendChan <- wrapMessage("newOrder", 0, lowestIP, i)
+					}
+					ElevatorStatus.OrdersUp[elevatorN][i] = 0
+				}
+				if ElevatorStatus.OrdersDown[elevatorN][i] == 1	{
+					if lowestIPindex == 0 {
+						sendChan <- wrapMessage("newOrder", 1, lowestIP, i)
+					}
+					ElevatorStatus.OrdersDown[elevatorN][i] = 0
+				}
+			}
 		}
 	}
 }
@@ -306,177 +364,227 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	}
 	
 	for i:=0; i<numberOfElevators; i++ {
+		
+		// Check number of orders
+		for j:=0; j<numberOfFloors; j++ {
+			if ElevatorStatus.OrdersUp[i][j] == 1 || ElevatorStatus.OrdersDown[i][j] == 1 || ElevatorStatus.OrdersOut[i][j] == 1 {
+				costs[i] += 2
+			}
+		}
+		// Check distances
+		costs[i] += int(math.Abs(float64(floor) - float64(ElevatorStatus.PreviousFloors[i])))
+		
+		// Check if order in same direction in front of elevator
+		if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == UP && buttonType == 0 {
+			costs[i] += 2*numberOfFloors
+		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == DOWN && buttonType == 1 {
+			costs[i] += 2*numberOfFloors
+			
+		// Check if order in opposite direction in front of elevator	
+		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == UP && buttonType == 1 {
+			costs[i] += 5*numberOfFloors
+		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == DOWN && buttonType == 0 {
+			costs[i] += 5*numberOfFloors
+
+		// Check if order in opposite direction behind elevator
+		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == UP && buttonType == 1 {
+			costs[i] += 8*numberOfFloors
+		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == DOWN && buttonType == 0 {
+			costs[i] += 8*numberOfFloors
+
+		// Check if order in same direction behind elevator
+		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == UP && buttonType == 0 {
+			costs[i] += 11*numberOfFloors
+		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == DOWN && buttonType == 1 {
+			costs[i] += 11*numberOfFloors
+
+	}
+	cheapestElevator	= 0
+	cheapestCost		:= 10000
+	
+	for i:=0; i<numberOfElevators; i++ {
+		if costs[i] < int(cheapestCost) && ElevatorStatus.ActiveElevators[i] != "empty" {
+			cheapestCost = costs[i]
+			cheapestElevator = i
+		}
+	}
+	Printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nkostnader liste")
+	Println(costs)
+	Println(cheapestElevator)
+	Printf("======================================================\n\n\n\n\n\n\n\n\n")
+	return
+}
+
+/*func costFunction(floor int, buttonType int) (cheapestElevator int) {
+	var costs[numberOfElevators]int
+	for i:=0; i<numberOfElevators; i++ {
+		costs[i] = 0
+	}
+	
+	for i:=0; i<numberOfElevators; i++ {
 		for j:=0; j<numberOfFloors; j++ {
 			// Check number of orders
-			if 	ordersUp[i][j] == 1 || ordersDown[i][j] == 1 || ordersOut[i][j] == 1 {
+			if ElevatorStatus.OrdersUp[i][j] == 1 || ElevatorStatus.OrdersDown[i][j] == 1 || ElevatorStatus.OrdersOut[i][j] == 1 {
 				costs[i] += 10
 			}
 		}
 		// Check if direction towards order
-		if (floor > previousFloors[i] && directions[i] == 1) || (floor < previousFloors[i] && directions[i] == 0) {
+		if (floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == 1) || (floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == 0) {
 			costs[i] += 5*numberOfFloors
 		}
 		// Check distances
-		costs[i] += int(2*math.Abs(float64(floor) - float64(previousFloors[i])))
+		costs[i] += int(2*math.Abs(float64(floor) - float64(ElevatorStatus.PreviousFloors[i])))
 		// Check if same direction as order
-		if buttonType != directions[i] {
+		if buttonType != ElevatorStatus.Directions[i] {
 			costs[i] += 5*numberOfFloors
 		}
 	}
 	cheapestElevator	= 0
-	cheapestCost		:= math.Inf(1)
+	cheapestCost		:= 10000
 	
 	for i:=0; i<numberOfElevators; i++ {
-		if costs[i] < int(cheapestCost) {
+		if costs[i] < int(cheapestCost) && ElevatorStatus.ActiveElevators[i] != "empty" {
+			cheapestCost = costs[i]
 			cheapestElevator = i
 		}
 	}
+	Printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nkostnader liste")
+	Println(costs)
+	Println(cheapestElevator)
+	Printf("======================================================\n\n\n\n\n\n\n\n\n")
 	return
-}
+}*/
 
-func EventHandler(sendChan chan string, upButtonChan chan int, downButtonChan chan int,
-					commandButtonChan chan int, floorChan chan int, ackTimerChan chan string,
-					receiveChan chan string, ackTimeoutChan chan string, doorTimerChan chan string) {
-	var ack				string
+func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan chan int,
+					commandButtonChan chan int, floorChan chan int, receiveChan chan []byte,
+					doorTimerChan chan string) {
 	var button			int
-	//var currentFloor	int
-	var chosenElevator	int
-	var message			string
+	var chosenElevator	string
+	var message			[]byte
 	for {
 		select {
 		case button = <- upButtonChan:
-			chosenElevator = costFunction(button, 0)
-			ackTimerChan <- "acktimer"
+			chosenElevator = ElevatorStatus.ActiveElevators[costFunction(button, 0)]
 			sendChan <- wrapMessage("newOrder", 0, chosenElevator, button)
 			
 		case button = <- downButtonChan:
-			chosenElevator = costFunction(button, 1)
-			ackTimerChan <- "acktimer"
+			chosenElevator = ElevatorStatus.ActiveElevators[costFunction(button, 1)]
 			sendChan <- wrapMessage("newOrder", 1, chosenElevator, button)
 			
 		case button = <- commandButtonChan:
-			chosenElevator = 0
+			chosenElevator = ElevatorStatus.ActiveElevators[0]
 			sendChan <- wrapMessage("newOrder", 2, chosenElevator, button)
 			
-		case ack = <- ackTimerChan:
-			ack = ack //hack
-			// ta ordre selv
-			
+
 		case message = <- receiveChan:
-			elevator, floor, buttonType, order, messageType := unwrapMessage(message)
-			handleMessage(sendChan, doorTimerChan, elevator, floor, buttonType, order, messageType)
+			elevator, floor, buttonType, MessageType := unwrapMessage(message)
+			handleMessage(sendChan, doorTimerChan, elevator, floor, buttonType, MessageType)
 			
-		case previousFloors[0] = <- floorChan:
-			stateOfShouldStop := shouldStop()
-			if stateOfShouldStop == 1 {
-				sendChan <- wrapMessage("orderCompleted", 0, 0, previousFloors[0])
-			} else {
-				sendChan <- wrapMessage("floorReached", 0, 0, previousFloors[0])
-			}
-			event_floorReached(stateOfShouldStop, doorTimerChan)
+		case ElevatorStatus.PreviousFloors[0] = <- floorChan:
+			StateOfShouldStop := shouldStop()
+			sendChan <- wrapMessage("floorReached", 0, "", ElevatorStatus.PreviousFloors[0])
+			event_floorReached(StateOfShouldStop, doorTimerChan)
 			
 		case <- doorTimerChan:
 			Printf("door timer finished\n")
+			sendChan <- wrapMessage("orderCompleted", 0, ElevatorStatus.ActiveElevators[0], ElevatorStatus.PreviousFloors[0])
 			event_doorTimerOut()
 		}
 	}
 }
 	
-func event_newOrder(sendChan chan string, doorTimerChan chan string) {
-	switch (state) {
+func event_newOrder(sendChan chan []byte, doorTimerChan chan string) {
+	switch (ElevatorStatus.State) {
 	case IDLE:
-		//set button lamp
-		if nextDirection() == STOP {  
-			//state = IDLE;
-			//Print("state = IDLE\n")
+		if nextDirection() == STOP {
 			driver.Set_door_open_lamp(1)
 			doorTimerChan <- "start"
-			state = DOOR_OPEN
-			Print("state = DOOR_OPEN\n")
-			sendChan <- wrapMessage("orderCompleted", 0, 0, previousFloors[0])
+			ElevatorStatus.State = DOOR_OPEN
+			Print("State = DOOR_OPEN\n")
+			sendChan <- wrapMessage("orderCompleted", 0, "", ElevatorStatus.PreviousFloors[0])
 		} else if nextDirection() == UP {
-			driver.Set_motor_direction(UP);
-			directions[0] = UP;
- 			state = MOVING;
- 			Print("state = MOVING\n")
+			driver.Set_motor_direction(UP)
+			ElevatorStatus.Directions[0] = UP
+ 			ElevatorStatus.State = MOVING 			
+ 			Print("State = MOVING\n")
 		} else if nextDirection() == DOWN {
-			driver.Set_motor_direction(DOWN);
-			directions[0] = DOWN;
-			state = MOVING;
-			Print("state = MOVING\n")
+			driver.Set_motor_direction(DOWN)
+			ElevatorStatus.Directions[0] = DOWN
+			ElevatorStatus.State = MOVING
+			Print("State = MOVING\n")
 		} else {
 			Printf("ERROR, event_newOrder: nextDirection returns invalid value")
 		}
 	case DOOR_OPEN:
-		//set button lamp
+		// do nothing
 	case MOVING:
-		//set button lamp
+		// do nothing
 	}
 }
 
-func event_floorReached(stateOfShouldStop int, doorTimerChan chan string) {
-	driver.Set_floor_indicator(previousFloors[0])
-	switch state {
+func event_floorReached(StateOfShouldStop int, doorTimerChan chan string) {
+	driver.Set_floor_indicator(ElevatorStatus.PreviousFloors[0])
+	switch ElevatorStatus.State {
 	case IDLE:
 		Printf("ERROR, event: floorReached when not moving!")
 	case DOOR_OPEN:
 		Printf("ERROR, event: floorReached when not moving!")
 	case MOVING:
-		if stateOfShouldStop == 1 {
+		if StateOfShouldStop == 1 {
 			driver.Set_motor_direction(STOP)
 			driver.Set_door_open_lamp(1)
 			doorTimerChan <- "start"
-			state = DOOR_OPEN
-			Print("state = DOOR_OPEN\n")
+			ElevatorStatus.State = DOOR_OPEN
+			Print("State = DOOR_OPEN\n")
 		}
 	}
 }
 
 func event_doorTimerOut() {
-	switch state {
+	switch ElevatorStatus.State {
 	case IDLE:
-		// close door? (shouldnt happen)
+		// do nothing
 	case DOOR_OPEN:
 		driver.Set_door_open_lamp(0)
 		if nextDirection() == STOP {  
-			state = IDLE;
-			Print("state = IDLE\n")
+			ElevatorStatus.State = IDLE;
+			Print("State = IDLE\n")
 		} else if nextDirection() == UP {
 			driver.Set_motor_direction(UP)
-			directions[0] = UP
- 			state = MOVING
- 			Print("state = MOVING\n")
+			ElevatorStatus.Directions[0] = UP
+ 			ElevatorStatus.State = MOVING
+ 			Print("State = MOVING\n")
 		} else if nextDirection() == DOWN {
 			driver.Set_motor_direction(DOWN)
-			directions[0] = DOWN
-			state = MOVING
-			Print("state = MOVING\n")
+			ElevatorStatus.Directions[0] = DOWN
+			ElevatorStatus.State = MOVING
+			Print("State = MOVING\n")
 		} else {
 			Printf("ERROR, event_doorTimerOut: nextDirection returns invalid value")
 		}
 	case MOVING:
-		// close door? (shouldnt happen)
+		// do nothing
 	}
 }
 
 func shouldStop() int {
-	if directions[0] == UP {
-		Printf("ordersUp: %d, OrdersDown: %d \n", ordersUp[0][previousFloors[0]], ordersDown[0][previousFloors[0]])
-		if (ordersUp[0][previousFloors[0]] | ordersOut[0][previousFloors[0]]) != 0 {
+	if ElevatorStatus.Directions[0] == UP {
+		Printf("OrdersUp: %d, OrdersDown: %d \n", ElevatorStatus.OrdersUp[0][ElevatorStatus.PreviousFloors[0]], ElevatorStatus.OrdersDown[0][ElevatorStatus.PreviousFloors[0]])
+		if (ElevatorStatus.OrdersUp[0][ElevatorStatus.PreviousFloors[0]] | ElevatorStatus.OrdersOut[0][ElevatorStatus.PreviousFloors[0]]) != 0 {
 			return 1;
 		}
-		for floor:=previousFloors[0]+1; floor<numberOfFloors; floor++ {
-			if (ordersUp[0][floor] | ordersDown[0][floor] | ordersOut[0][floor]) != 0 {
+		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<numberOfFloors; floor++ {
+			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return 0;
 			}
 		}
 	}
-	if directions[0] == DOWN {
-		if(ordersDown[0][previousFloors[0]] | ordersOut[0][previousFloors[0]])!=0 {
+	if ElevatorStatus.Directions[0] == DOWN {
+		if(ElevatorStatus.OrdersDown[0][ElevatorStatus.PreviousFloors[0]] | ElevatorStatus.OrdersOut[0][ElevatorStatus.PreviousFloors[0]])!=0 {
 			return 1;
 		}
-		for floor:=0; floor<previousFloors[0]; floor++ {
-			if(ordersUp[0][floor] | ordersDown[0][floor] | ordersOut[0][floor]) != 0{
+		for floor:=0; floor<ElevatorStatus.PreviousFloors[0]; floor++ {
+			if(ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0{
 				return 0;
 			}
 		}
@@ -485,47 +593,55 @@ func shouldStop() int {
 }
 
 func nextDirection() int {
-	if previousFloors[0] == 0 {
-		for floor:=previousFloors[0]+1; floor<4; floor++ {
-			if (ordersUp[0][floor] | ordersDown[0][floor] | ordersOut[0][floor]) != 0 {
+	if ElevatorStatus.PreviousFloors[0] == 0 {
+	
+		Println("YOLO etasje 0")
+	
+		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<4; floor++ {
+			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return UP;
 			}
 		}
-	} else if previousFloors[0] == numberOfFloors {
-		for floor:=0; floor<previousFloors[0]; floor++ {
-			if (ordersUp[0][floor] | ordersDown[0][floor] | ordersOut[0][floor]) != 0 {
+	} else if ElevatorStatus.PreviousFloors[0] == numberOfFloors {
+	
+		Println("YOLO etasje 3")
+	
+		for floor:=0; floor<ElevatorStatus.PreviousFloors[0]; floor++ {
+			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return DOWN;
  			}
 		}
-	} else if (directions[0] == UP){
-		for floor:=previousFloors[0]+1; floor<4; floor++ {
-			if (ordersUp[0][floor] | ordersDown[0][floor] | ordersOut[0][floor]) != 0 {
+	} else if (ElevatorStatus.Directions[0] == UP){
+	
+		Println("YOLO retning opp")
+	
+		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<4; floor++ {
+			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return UP;
 			}
 		}
-		for floor:=0; floor<previousFloors[0]; floor++ {
-			if (ordersUp[0][floor] | ordersDown[0][floor] | ordersOut[0][floor]) != 0 {
+		for floor:=0; floor<ElevatorStatus.PreviousFloors[0]; floor++ {
+			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return DOWN;
 			}
 		}
-	} else if (directions[0] == DOWN){
-		for floor:=0; floor<previousFloors[0]; floor++ {
-			if (ordersUp[0][floor] | ordersDown[0][floor] | ordersOut[0][floor]) != 0 {
+	} else if (ElevatorStatus.Directions[0] == DOWN){
+	
+		Println("YOLO retning ned")
+	
+		for floor:=0; floor<ElevatorStatus.PreviousFloors[0]; floor++ {
+			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return DOWN;
 			}
 		}
-		for floor:=previousFloors[0]+1; floor<4; floor++ {
-			if (ordersUp[0][floor] | ordersDown[0][floor] | ordersOut[0][floor]) != 0 {
+		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<4; floor++ {
+			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return UP;
 			}
 		}
 	}
 	return STOP;
 }
-
-
-
-
 
 
 

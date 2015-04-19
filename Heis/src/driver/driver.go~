@@ -6,10 +6,9 @@ import(
 	"time"
 )
 
-
 type direction int
 
-const(
+const (
 	NFloors 			int = 4
 	NButtonTypes 		int = 3
 
@@ -22,7 +21,7 @@ const(
     	STOP direction		= 0
 )
 
-var(
+var (
 	lamp_channel_matrix [NFloors][NButtonTypes] int = [NFloors][NButtonTypes]int{
 	    {LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
 	    {LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
@@ -39,9 +38,8 @@ var(
 	}
 )
 
-
-
-func Init() int{
+func Init() int
+{
 	fmt.Printf("I'm running driver\n")
 	initStat := Io_init()
 	
@@ -52,25 +50,25 @@ func Init() int{
 	
     for i := 0; i < NFloors; i++ {
         if i != 0 {
-            set_button_lamp(BUTTON_CALL_DOWN, i, 0)
+            Set_button_lamp(BUTTON_CALL_DOWN, i, 0)
         }
         if i != NFloors - 1 {
-            set_button_lamp(BUTTON_CALL_UP, i, 0)
+            Set_button_lamp(BUTTON_CALL_UP, i, 0)
         }
-        set_button_lamp(BUTTON_COMMAND, i, 0)
+        Set_button_lamp(BUTTON_COMMAND, i, 0)
     }
 	
     // Clear stop lamp, door open lamp, and set floor indicator to ground floor.
     set_stop_lamp(0)
-    set_door_open_lamp(0)
-    set_floor_indicator(0)
+    Set_door_open_lamp(0)
+    Set_floor_indicator(0)
 	
     // Return success.
     return 1
-
 }
 
-func UpButtonPoller(upButtonChan chan int) {
+func UpButtonPoller(upButtonChan chan int)
+{
 	var upButtonFlags [3]int
 
 	for {
@@ -91,7 +89,8 @@ func UpButtonPoller(upButtonChan chan int) {
 	}
 }
 
-func DownButtonPoller(downButtonChan chan int) {
+func DownButtonPoller(downButtonChan chan int)
+{
 	var downButtonFlags [3]int
 	for {
 		for i := 1; i < NFloors; i++ {
@@ -110,7 +109,8 @@ func DownButtonPoller(downButtonChan chan int) {
 	}
 }
 
-func CommandButtonPoller(commandButtonChan chan int) {
+func CommandButtonPoller(commandButtonChan chan int)
+{
 	var commandButtonFlags [4]int
 	for {
 		for i := 0; i < NFloors; i++ {
@@ -129,7 +129,8 @@ func CommandButtonPoller(commandButtonChan chan int) {
 	}
 }
 
-func FloorPoller(floorChan chan int) { 
+func FloorPoller(floorChan chan int)
+{ 
 	floorPollerFlag := 0 
 	currFloor := -1 
 	for { 
@@ -148,7 +149,8 @@ func FloorPoller(floorChan chan int) {
 	} 
 }
 
-func Set_motor_direction(dir direction) {
+func Set_motor_direction(dir direction)
+{
     if dir == 0 {
         io_write_analog(MOTOR, 0)
     } else if dir > 0 {
@@ -160,7 +162,8 @@ func Set_motor_direction(dir direction) {
     }
 }
 
-func Set_door_open_lamp(value int) {
+func Set_door_open_lamp(value int)
+{
     if value != 0 {
         io_set_bit(LIGHT_DOOR_OPEN)
     } else {
@@ -168,15 +171,18 @@ func Set_door_open_lamp(value int) {
     }
 }
 
- func get_obstruction_signal() int {
-    return io_read_bit(OBSTRUCTION)
+func get_obstruction_signal() int
+{
+	return io_read_bit(OBSTRUCTION)
 }
 
-func Get_stop_signal() int {
+func Get_stop_signal() int
+{
     return io_read_bit(STOP_SENSOR)
 }
 
-func set_stop_lamp(value int) {
+func set_stop_lamp(value int)
+{
     if value != 0 {
         io_set_bit(LIGHT_STOP)
     } else {
@@ -184,7 +190,8 @@ func set_stop_lamp(value int) {
     }
 }
 
-func Get_floor_sensor_signal() int{
+func Get_floor_sensor_signal() int
+{
     if io_read_bit(SENSOR_FLOOR1) != 0 {
         return 0
     } else if io_read_bit(SENSOR_FLOOR2) != 0 {
@@ -198,7 +205,8 @@ func Get_floor_sensor_signal() int{
     }
 }
 
-func set_floor_indicator(floor int) {
+func Set_floor_indicator(floor int)
+{
     if floor < 0 || floor >= NFloors {
         os.Exit(1)
     }
@@ -216,7 +224,8 @@ func set_floor_indicator(floor int) {
     }
 }
 
-func get_button_signal(button int,floor int) int{
+func get_button_signal(button int,floor int) int
+{
     if floor < 0 || floor >= NFloors {
         fmt.Printf("reading button on invalid floor")
     }
@@ -234,7 +243,8 @@ func get_button_signal(button int,floor int) int{
     }
 }
 
-func set_button_lamp(button int, floor int, value int) {
+func Set_button_lamp(button int, floor int, value int)
+{
     if floor < 0 || floor >= NFloors {
     	//os.Exit(1)
     	fmt.Printf("setting lamp in nonvalid floor")
@@ -254,3 +264,16 @@ func set_button_lamp(button int, floor int, value int) {
         io_clear_bit(lamp_channel_matrix[floor][button])
     }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

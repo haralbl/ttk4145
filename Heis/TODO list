@@ -1,12 +1,12 @@
 TODO:
 	slå sammen buttonChans?
-	del opp handleMessage i /status
 	Calling GetLocalIP() more than once
 	/timer assumes 3 elevators
 	checking if oneself is alive...
-	use buffers in any of the channels?
 	fordele ordre til døde heiser(ide:alle andre tar ordrene, bedre metode?!!)
 	bruke kun channels til /driver?
+	fjÆrn acktimer
+	Hvis tid, fiks generell unwrap som funker i CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNot() også
 	
 	spamme helt til acktimeout, ikke bare spamme 5 ganger
 	
@@ -18,6 +18,13 @@ script:
 	cd src
 	go build main.go
 	go run main.go
+	
+	chmod 777 sshlogin.sh
+	./sshlogin.sh
+	
+	ssh martlei@129.241.187.158
+	scp -r /home/haralbl/ttk4145 martlei@129.241.187.158:/home/martlei
+
 	
 Plan:
 	når knappetrykk registreres // , etasje nåes eller ordre fullføres:
@@ -45,4 +52,9 @@ prosedyre KostFunksjon(kø rutenett) {
 
 
 
+SE STATUS LINJE 168 {
+	vi har endret til json.
+	json.Unmarshal() eller noe etter gir ut tom statusstruct.
+	Kan det være at vi prøver å passe et receiveobjekt på kanal og at dette så forsvinner fordi det er lagret lokalt i funksjonen receive
+}
 
