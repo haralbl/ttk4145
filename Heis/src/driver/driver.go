@@ -126,18 +126,24 @@ func CommandButtonPoller(commandButtonChan chan int) {
 }
 
 func FloorPoller(floorChan chan int) {
-	floorPollerFlag := 0 
-	currFloor := -1 
+	floorReachedFlag 	:= 0
+	floorLeftFlag 		:= 0 
+	currFloor 			:= -1 
 	for { 
 		currFloor = Get_floor_sensor_signal() 
-		if floorPollerFlag == 0 { 
+		if floorReachedFlag == 0 { 
 			if currFloor != -1 { 
-				floorPollerFlag = 1 
-				floorChan <- currFloor 
-			} 
+				floorReachedFlag = 1
+				floorChan <- currFloor
+				floorLeftFlag = 0
+			}
 		} else { 
 			if currFloor == -1 { 
-				floorPollerFlag = 0 
+				floorReachedFlag = 0
+				if floorLeftFlag == 0 {
+					floorLeftFlag = 1
+					floorLeftChan <- "floor left"
+				}
 			} 
 		} 
 		time.Sleep(time.Millisecond*10)

@@ -1,7 +1,6 @@
 package finiteStateMachine
 
 import (
-	."fmt"
 	"defines"
 	"math"
 )
@@ -47,7 +46,14 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == 1 {
 			costs[i] += 11*defines.NumberOfFloors
 		}
+		if buttonType == 1 || ElevatorStatus.OrdersUp[i][floor] == 1 {
+			costs[i] = 0
+		}
+		if buttonType == -1 || ElevatorStatus.OrdersDown[i][floor] == 1 {
+			costs[i] = 0
+		}
 	}
+	
 	cheapestElevator	= 0
 	cheapestCost		:= 10000
 	
@@ -57,10 +63,6 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 			cheapestElevator = i
 		}
 	}
-	Printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nkostnader liste")
-	Println(costs)
-	Println(cheapestElevator)
-	Printf("======================================================\n\n\n\n\n\n\n\n\n")
 	return
 }
 
