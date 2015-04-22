@@ -4,10 +4,11 @@ import (
 	."fmt"
 	"time"
 	"os"
+	"os/exec"
 )
 
 const (
-	TimeUntilStuck = 10*time.Second
+	timeUntilStuck = 10*time.Second
 )
 
 var (
@@ -24,26 +25,28 @@ func StuckTimer(resetStuckTimerChan chan string, enableStuckTimerChan chan int, 
 		case <- resetStuckTimerChan:
 			stuckTimer = time.Now()
 			
-		case enable <- enableStuckTimerChan:
+		case enable = <- enableStuckTimerChan:
 			if enable == 1 {
 				stuckTimer = time.Now()
 				stuckTimerFlag = true
 			} else {
 				stuckTimerFlag = false
 			}
-			
-		case <- stuckTimeoutChan:
-			os.Exit(1)
+		//case <- stuckTimeoutChan:
 		}
 	}
 }
 
 func checkStuckTimer(stuckTimeoutChan chan int) {
 	for {
-		if (int64(time.Since(stuckTimer)) > int64(stuckOpenTime)) && (stuckTimerFlag == true) {
+		if (int64(time.Since(stuckTimer)) > int64(timeUntilStuck)) && (stuckTimerFlag == true) {
 			//stuckTimerFlag = false
+			//stuckTimeoutChan <- 1
 			Println("stuckTimer timeout")
-			stuckTimeoutChan <- 1
+			newSlave := exec.Command("gnome-terminal", "-x", "sh", "-c", "go run main.go")
+			_ = newSlave.Run()
+			time.Sleep(3*time.Second)
+			os.Exit(1)
 		}
 		time.Sleep(100*time.Millisecond)
 	}
