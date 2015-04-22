@@ -4,6 +4,7 @@ import (
 	."fmt"
 	"time"
 	"status"
+	"defines"
 )
 
 const (
@@ -11,12 +12,12 @@ const (
 )
 
 var (
-	timers		[status.NumberOfElevators]time.Time
-	timerFlags	[status.NumberOfElevators]bool
+	timers		[defines.NumberOfElevators]time.Time
+	timerFlags	[defines.NumberOfElevators]bool
 )
 
 func Init() {
-	for i:=0; i<status.NumberOfElevators; i++ {
+	for i:=0; i<defines.NumberOfElevators; i++ {
 		timerFlags[i] = false
 	}
 }
@@ -39,7 +40,7 @@ func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int) {
 
 func checkTimer(elevatorTimeoutChan chan int) {
 	for {
-		for i:=0; i<status.NumberOfElevators; i++ {
+		for i:=0; i<defines.NumberOfElevators; i++ {
 			if (int64(time.Since(timers[i])) > int64(timeUntilTimeout)) && (timerFlags[i] == true) {
 				timerFlags[i] = false
 				elevatorTimeoutChan <- i
@@ -67,13 +68,13 @@ const (
 )
 
 var (
-	timers		[status.NumberOfElevators]time.Time
+	timers		[defines.NumberOfElevators]time.Time
 
-	timerFlags	[status.NumberOfElevators]bool
+	timerFlags	[defines.NumberOfElevators]bool
 )
 
 func Init() {
-	for i:=0; i<status.NumberOfElevators; i++ {
+	for i:=0; i<defines.NumberOfElevators; i++ {
 		timerFlags[i] = false
 	}
 }
