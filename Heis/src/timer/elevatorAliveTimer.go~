@@ -3,12 +3,11 @@ package timer
 import (
 	."fmt"
 	"time"
-	"status"
 	"defines"
 )
 
 const (
-	timeUntilTimeout = 700*time.Millisecond
+	timeUntilTimeout = 250*NumberOfElevators*time.Millisecond
 )
 
 var (

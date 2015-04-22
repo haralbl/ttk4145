@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	timeUntilTimeout = 700*time.Millisecond
+	timeUntilTimeout = 250*defines.NumberOfElevators*time.Millisecond
 )
 
 var (
