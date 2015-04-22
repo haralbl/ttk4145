@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	numberOfElevators	= 3
+	NumberOfElevators	= 3
 	numberOfFloors		= 4
 	
 	IDLE				= 0
@@ -27,7 +27,7 @@ var (
 )
 
 func Initialize(initChan chan string, floorChan chan int) {	
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=0; i<NumberOfElevators; i++ {
 		ElevatorStatus.ActiveElevators[i] = "empty"
 	} 
 	ElevatorStatus.ActiveElevators[0] = network.GetLocalIP()
@@ -102,10 +102,10 @@ func unwrapMessage(message []byte) (elevator string, floor int, buttonType int, 
 	currentIPtoUpdate				:= ""
 	currentPositionInReceivedStatus := 0
 	
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=0; i<NumberOfElevators; i++ {
 		currentIPtoUpdate = ElevatorStatus.ActiveElevators[i]
 		currentPositionInReceivedStatus = -1
-		for j:=0; j<numberOfElevators; j++ {
+		for j:=0; j<NumberOfElevators; j++ {
 			if currentIPtoUpdate == receivedStatus.ActiveElevators[j] {
 				currentPositionInReceivedStatus = j
 			}
@@ -147,7 +147,7 @@ func CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendCh
 			
 			if tempStatus.MessageType == "newOrder" {
 				var elevator int = -1
-				for i:=0; i<numberOfElevators; i++ {
+				for i:=0; i<NumberOfElevators; i++ {
 					if tempStatus.OrderedElevator == ElevatorStatus.ActiveElevators[i] {
 						elevator = i
 					}
@@ -191,7 +191,7 @@ func handleMessage(sendChan chan []byte, doorTimerChan chan string, elevatorIP s
 		Println("received ack")
 		
 		var elevator int = -1
-		for i:=0; i<numberOfElevators; i++ {
+		for i:=0; i<NumberOfElevators; i++ {
 			if elevatorIP == ElevatorStatus.ActiveElevators[i] {
 				elevator = i
 			}
@@ -276,7 +276,7 @@ func handleMessage(sendChan chan []byte, doorTimerChan chan string, elevatorIP s
 
 func elevatorIPtoIndex(elevatorIP string) (elevatorIndex int) {
 	elevatorIndex = 0
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=0; i<NumberOfElevators; i++ {
 		if elevatorIP == ElevatorStatus.ActiveElevators[i] {
 			elevatorIndex = i
 		}
@@ -285,7 +285,7 @@ func elevatorIPtoIndex(elevatorIP string) (elevatorIndex int) {
 }
 
 func isElevatorInList(elevatorIP string) int {
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=0; i<NumberOfElevators; i++ {
 		if ElevatorStatus.ActiveElevators[i] == elevatorIP {
 			return i
 		}
@@ -297,7 +297,7 @@ func addElevator(elevatorIP string) int {
 	alreadyAdded	:= false
 	full			:= true
 	nextIndex		:= 0
-	for i:=numberOfElevators-1; i>-1; i-- {
+	for i:=NumberOfElevators-1; i>-1; i-- {
 		if ElevatorStatus.ActiveElevators[i] == elevatorIP {
 			alreadyAdded = true
 		}
@@ -335,7 +335,7 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 			removeElevator(elevatorN)
 			var lowestIPindex = 0
 			var lowestIP = ElevatorStatus.ActiveElevators[0]
-			for i:=0; i<numberOfElevators; i++ {
+			for i:=0; i<NumberOfElevators; i++ {
 				if ElevatorStatus.ActiveElevators[i] < lowestIP {
 					lowestIP = ElevatorStatus.ActiveElevators[i]
 					lowestIPindex = i
@@ -360,12 +360,12 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 }
 
 func costFunction(floor int, buttonType int) (cheapestElevator int) {
-	var costs[numberOfElevators]int
-	for i:=0; i<numberOfElevators; i++ {
+	var costs[NumberOfElevators]int
+	for i:=0; i<NumberOfElevators; i++ {
 		costs[i] = 0
 	}
 	
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=0; i<NumberOfElevators; i++ {
 		
 		// Check number of orders
 		for j:=0; j<numberOfFloors; j++ {
@@ -404,7 +404,7 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	cheapestElevator	= 0
 	cheapestCost		:= 10000
 	
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=0; i<NumberOfElevators; i++ {
 		if costs[i] < int(cheapestCost) && ElevatorStatus.ActiveElevators[i] != "empty" {
 			cheapestCost = costs[i]
 			cheapestElevator = i
@@ -418,12 +418,12 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 }
 
 /*func costFunction(floor int, buttonType int) (cheapestElevator int) {
-	var costs[numberOfElevators]int
-	for i:=0; i<numberOfElevators; i++ {
+	var costs[NumberOfElevators]int
+	for i:=0; i<NumberOfElevators; i++ {
 		costs[i] = 0
 	}
 	
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=0; i<NumberOfElevators; i++ {
 		for j:=0; j<numberOfFloors; j++ {
 			// Check number of orders
 			if ElevatorStatus.OrdersUp[i][j] == 1 || ElevatorStatus.OrdersDown[i][j] == 1 || ElevatorStatus.OrdersOut[i][j] == 1 {
@@ -444,7 +444,7 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 	cheapestElevator	= 0
 	cheapestCost		:= 10000
 	
-	for i:=0; i<numberOfElevators; i++ {
+	for i:=0; i<NumberOfElevators; i++ {
 		if costs[i] < int(cheapestCost) && ElevatorStatus.ActiveElevators[i] != "empty" {
 			cheapestCost = costs[i]
 			cheapestElevator = i

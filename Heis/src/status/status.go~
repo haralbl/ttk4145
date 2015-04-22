@@ -459,8 +459,7 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 
 func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan chan int,
 					commandButtonChan chan int, floorChan chan int, receiveChan chan []byte,
-					doorTimerChan chan string, resetStuckTimerChan chan string, enableStuckTimerChan chan int,
-					enableStuckTimerChan chan int) {
+					doorTimerChan chan string, resetStuckTimerChan chan string, enableStuckTimerChan chan int) {
 	var button			int
 	var chosenElevator	string
 	var message			[]byte

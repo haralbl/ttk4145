@@ -40,6 +40,8 @@ func main() {
 		Printf("driver.Init failed")
 		os.Exit(1)
 	}
+	timer.Init()
+		
 	
 	go driver.UpButtonPoller(upButtonChan)
 	go driver.DownButtonPoller(downButtonChan)
@@ -57,6 +59,7 @@ func main() {
 	go timer.ElevatorTimer(elevatorTimerChan, elevatorTimeoutChan)
 	go timer.DoorTimer(doorTimerChan, doorTimeoutChan)
 	go timer.StuckTimer(resetStuckTimerChan, enableStuckTimerChan, stuckTimeoutChan)
+	
 	
 	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan, sendChan)
 	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan, receiveChan, doorTimerChan, resetStuckTimerChan, enableStuckTimerChan)			

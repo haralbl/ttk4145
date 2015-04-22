@@ -3,6 +3,7 @@ package timer
 import (
 	."fmt"
 	"time"
+	"status"
 )
 
 const (
@@ -10,16 +11,74 @@ const (
 )
 
 var (
-	timer0		time.Time
-	timer1		time.Time
-	timer2		time.Time
-	timer0flag	bool = false
-	timer1flag	bool = false
-	timer2flag	bool = false
+	timers		[status.NumberOfElevators]time.Time
+	timerFlags	[status.NumberOfElevators]bool
 )
 
-func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int)
-{
+func Init() {
+	for i:=0; i<status.NumberOfElevators; i++ {
+		timerFlags[i] = false
+	}
+}
+
+func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int) {
+	elevatorN := -1
+	go checkTimer(elevatorTimeoutChan)
+	
+	for {
+		select {
+		case elevatorN = <- elevatorTimerChan:
+			timers[elevatorN] = time.Now()
+			timerFlags[elevatorN] = true
+			
+		case elevatorN = <- elevatorTimeoutChan:
+			elevatorTimerChan <- elevatorN
+		}
+	}
+}
+
+func checkTimer(elevatorTimeoutChan chan int) {
+	for {
+		for i:=0; i<status.NumberOfElevators; i++ {
+			if (int64(time.Since(timers[i])) > int64(timeUntilTimeout)) && (timerFlags[i] == true) {
+				timerFlags[i] = false
+				elevatorTimeoutChan <- i
+				Printf("timer %d timeout", i)
+			}
+		}
+		time.Sleep(10*time.Millisecond)
+	}
+}
+
+
+
+
+
+/*package timer
+
+import (
+	."fmt"
+	"time"
+	"status"
+)
+
+const (
+	timeUntilTimeout = 700*time.Millisecond
+)
+
+var (
+	timers		[status.NumberOfElevators]time.Time
+
+	timerFlags	[status.NumberOfElevators]bool
+)
+
+func Init() {
+	for i:=0; i<status.NumberOfElevators; i++ {
+		timerFlags[i] = false
+	}
+}
+
+func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int) {
 	elevatorN := -1
 	go checkTimer(elevatorTimeoutChan)
 	
@@ -28,14 +87,14 @@ func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int)
 		case elevatorN = <- elevatorTimerChan:
 			switch elevatorN {
 			case 0:
-				timer0 = time.Now()
-				timer0flag = true
+				timers[0] = time.Now()
+				timerFlags[0] = true
 			case 1:
-				timer1 = time.Now()
-				timer1flag = true
+				timers[1] = time.Now()
+				timerFlags[1] = true
 			case 2:
-				timer2 = time.Now()
-				timer2flag = true
+				timers[2] = time.Now()
+				timerFlags[2] = true
 			}
 		case elevatorN = <- elevatorTimeoutChan:
 			elevatorTimerChan <- elevatorN
@@ -45,24 +104,24 @@ func ElevatorTimer(elevatorTimerChan chan int, elevatorTimeoutChan chan int)
 
 func checkTimer(elevatorTimeoutChan chan int) {
 	for {
-		if (int64(time.Since(timer0)) > int64(timeUntilTimeout)) && (timer0flag == true) {
-			timer0flag = false
+		if (int64(time.Since(timers[0])) > int64(timeUntilTimeout)) && (timerFlags[0] == true) {
+			timerFlags[0] = false
 			elevatorTimeoutChan <- 0
 			Println("timer 0 timeout")
 		}
-		if (int64(time.Since(timer1)) > int64(timeUntilTimeout)) && (timer1flag == true) {
-			timer1flag = false
+		if (int64(time.Since(timers[1])) > int64(timeUntilTimeout)) && (timerFlags[1] == true) {
+			timerFlags[1] = false
 			elevatorTimeoutChan <- 1
 			Println("timer 1 timeout")
 		}
-		if (int64(time.Since(timer2)) > int64(timeUntilTimeout)) && (timer2flag == true) {
-			timer2flag = false
+		if (int64(time.Since(timers[2])) > int64(timeUntilTimeout)) && (timerFlags[2] == true) {
+			timerFlags[2] = false
 			elevatorTimeoutChan <- 2
 			Println("timer 2 timeout")
 		}
 		time.Sleep(10*time.Millisecond)
 	}
-}
+}*/
 
 
 

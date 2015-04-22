@@ -59,7 +59,7 @@ func main() {
 	go timer.StuckTimer(resetStuckTimerChan, enableStuckTimerChan, stuckTimeoutChan)
 	
 	go status.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan, sendChan)
-	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan, receiveChan, doorTimerChan, resetStuckTimerChan, enableStuckTimerChan, enableStuckTimerChan)			
+	go status.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan, receiveChan, doorTimerChan, resetStuckTimerChan, enableStuckTimerChan)			
 	go status.CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendChan, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan)
 	
 	Println(<-doneChan)
