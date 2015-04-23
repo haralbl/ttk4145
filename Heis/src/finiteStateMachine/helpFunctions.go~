@@ -1,13 +1,14 @@
 package finiteStateMachine
 
 import (
+	."fmt"
 	"network"
 	"encoding/json"
 	"defines"
 	"driver"
 )
 
-func Initialize(initChan chan string, floorChan chan int) {	
+func Initialize(initChan chan string, floorReachedChan chan int, floorLeftChan chan int) {	
 	for i:=0; i<defines.NumberOfElevators; i++ {
 		ElevatorStatus.ActiveElevators[i] = "empty"
 	} 
@@ -16,7 +17,9 @@ func Initialize(initChan chan string, floorChan chan int) {
 	
 	for {
 		select {
-		case ElevatorStatus.PreviousFloors[0] = <- floorChan:
+		case <- floorLeftChan: //to prevent deadlock
+		
+		case ElevatorStatus.PreviousFloors[0] = <- floorReachedChan:
 			driver.Set_floor_indicator(ElevatorStatus.PreviousFloors[0])
 			if ElevatorStatus.PreviousFloors[0] == 0 {
 				driver.Set_motor_direction(defines.STOP)
@@ -40,7 +43,8 @@ func PrintStatus(status defines.ElevatorStatus_t) {
 	for e:=0; e<defines.NumberOfElevators; e++ {
 		Printf("\nElevator %d\nOrdersUp	OrdersDown	OrdersOut\n", e)
 		for i:=0; i<defines.NumberOfFloors; i++ {
-			Printf("%d		%d		%d\n", status.OrdersUp[e][i], status.OrdersDown[e][i], status.OrdersOut[e][i])
+			Printf("%d		%d		%d\n", status.OrdersUp[e][i], status.OrdersDown[e][i], 
+			status.OrdersOut[e][i])
 		}
 	}
 		

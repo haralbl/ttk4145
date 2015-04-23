@@ -4,33 +4,23 @@ import(
 	"os"
 	"fmt"
 	"time"
+	"defines"
 )
 
 type direction int
 
-const (
-	NFloors 			int = 4
-	NButtonTypes 		int = 3
-
-	BUTTON_CALL_UP 		int = 0
-	BUTTON_CALL_DOWN 	int = 1
-	BUTTON_COMMAND 		int = 2
-
-    	UP direction 		= 1
-    	DOWN direction 		= -1
-    	STOP direction		= 0
-)
 
 var (
-	lamp_channel_matrix [NFloors][NButtonTypes] int = [NFloors][NButtonTypes]int{
+	//If number of floors is changed, you will have to add a larger number of addresses for the different buttons and lights 
+	lamp_channel_matrix [defines.NumberOfFloors][defines.NumberOfButtonTypes] int = [defines.NumberOfFloors][defines.NumberOfButtonTypes]int{
 	    {LIGHT_UP1, LIGHT_DOWN1, LIGHT_COMMAND1},
 	    {LIGHT_UP2, LIGHT_DOWN2, LIGHT_COMMAND2},
 	    {LIGHT_UP3, LIGHT_DOWN3, LIGHT_COMMAND3},
 	    {LIGHT_UP4, LIGHT_DOWN4, LIGHT_COMMAND4},
 	}
 
-
-	button_channel_matrix [NFloors][NButtonTypes] int = [NFloors][NButtonTypes]int{
+	//If number of floors is changed, you will have to add a larger number of addresses for the different buttons and lights
+	button_channel_matrix [defines.NumberOfFloors][defines.NumberOfButtonTypes] int = [defines.NumberOfFloors][defines.NumberOfButtonTypes]int{
 	    {BUTTON_UP1, BUTTON_DOWN1, BUTTON_COMMAND1},
 	    {BUTTON_UP2, BUTTON_DOWN2, BUTTON_COMMAND2},
 	    {BUTTON_UP3, BUTTON_DOWN3, BUTTON_COMMAND3},
@@ -47,14 +37,14 @@ func Init() int {
 		return 0
 	}
 	
-    for i := 0; i < NFloors; i++ {
+    for i := 0; i < defines.NumberOfFloors; i++ {
         if i != 0 {
-            Set_button_lamp(BUTTON_CALL_DOWN, i, 0)
+            Set_button_lamp(defines.BUTTON_CALL_DOWN, i, 0)
         }
-        if i != NFloors - 1 {
-            Set_button_lamp(BUTTON_CALL_UP, i, 0)
+        if i != defines.NumberOfFloors - 1 {
+            Set_button_lamp(defines.BUTTON_CALL_UP, i, 0)
         }
-        Set_button_lamp(BUTTON_COMMAND, i, 0)
+        Set_button_lamp(defines.BUTTON_COMMAND, i, 0)
     }
 	
     // Clear stop lamp, door open lamp, and set floor indicator to ground floor.
@@ -67,18 +57,18 @@ func Init() int {
 }
 
 func UpButtonPoller(upButtonChan chan int) {
-	var upButtonFlags [3]int
+	var upButtonFlags [defines.NumberOfFloors-1]int
 
 	for {
 
-		for i := 0; i < NFloors-1; i++ {
+		for i := 0; i < defines.NumberOfFloors-1; i++ {
 			if upButtonFlags[i] == 0 {
-				if get_button_signal(BUTTON_CALL_UP, i) == 1 {
+				if get_button_signal(defines.BUTTON_CALL_UP, i) == 1 {
 					upButtonFlags[i] = 1
 					upButtonChan <- i
 				}
 			} else {
-				if get_button_signal(BUTTON_CALL_UP, i) == 0 {
+				if get_button_signal(defines.BUTTON_CALL_UP, i) == 0 {
 					upButtonFlags[i] = 0
 				}
 			}
@@ -88,16 +78,16 @@ func UpButtonPoller(upButtonChan chan int) {
 }
 
 func DownButtonPoller(downButtonChan chan int) {
-	var downButtonFlags [3]int
+	var downButtonFlags [defines.NumberOfFloors-1]int
 	for {
-		for i := 1; i < NFloors; i++ {
+		for i := 1; i < defines.NumberOfFloors; i++ {
 			if downButtonFlags[i-1] == 0 {
-				if get_button_signal(BUTTON_CALL_DOWN, i) == 1 {
+				if get_button_signal(defines.BUTTON_CALL_DOWN, i) == 1 {
 					downButtonFlags[i-1] = 1
 					downButtonChan <- i
 				}
 			} else {
-				if get_button_signal(BUTTON_CALL_DOWN, i) == 0 {
+				if get_button_signal(defines.BUTTON_CALL_DOWN, i) == 0 {
 					downButtonFlags[i-1] = 0
 				}
 			}
@@ -107,16 +97,16 @@ func DownButtonPoller(downButtonChan chan int) {
 }
 
 func CommandButtonPoller(commandButtonChan chan int) {
-	var commandButtonFlags [4]int
+	var commandButtonFlags [defines.NumberOfFloors]int
 	for {
-		for i := 0; i < NFloors; i++ {
+		for i := 0; i < defines.NumberOfFloors; i++ {
 			if commandButtonFlags[i] == 0 {
-				if get_button_signal(BUTTON_COMMAND, i) == 1 {
+				if get_button_signal(defines.BUTTON_COMMAND, i) == 1 {
 					commandButtonFlags[i] = 1
 					commandButtonChan <- i
 				}
 			} else {
-				if get_button_signal(BUTTON_COMMAND, i) == 0 {
+				if get_button_signal(defines.BUTTON_COMMAND, i) == 0 {
 					commandButtonFlags[i] = 0
 				}
 			}
@@ -125,7 +115,7 @@ func CommandButtonPoller(commandButtonChan chan int) {
 	}
 }
 
-func FloorPoller(floorChan chan int) {
+func FloorPoller(floorReachedChan chan int, floorLeftChan chan string) {
 	floorReachedFlag 	:= 0
 	floorLeftFlag 		:= 0 
 	currFloor 			:= -1 
@@ -134,7 +124,7 @@ func FloorPoller(floorChan chan int) {
 		if floorReachedFlag == 0 { 
 			if currFloor != -1 { 
 				floorReachedFlag = 1
-				floorChan <- currFloor
+				floorReachedChan <- currFloor
 				floorLeftFlag = 0
 			}
 		} else { 
@@ -201,7 +191,7 @@ func Get_floor_sensor_signal() int {
 }
 
 func Set_floor_indicator(floor int) {
-    if floor < 0 || floor >= NFloors {
+    if floor < 0 || floor >= defines.NumberOfFloors {
         os.Exit(1)
     }
     // Binary encoding. One light must always be on.
@@ -219,13 +209,13 @@ func Set_floor_indicator(floor int) {
 }
 
 func get_button_signal(button int,floor int) int {
-    if floor < 0 || floor >= NFloors {
+    if floor < 0 || floor >= defines.NumberOfFloors {
         fmt.Printf("reading button on invalid floor")
     }
-    if (!(button == BUTTON_CALL_UP && floor == NFloors - 1)) || (!(button == BUTTON_CALL_DOWN && floor == 0)) {
+    if (!(button == defines.BUTTON_CALL_UP && floor == defines.NumberOfFloors - 1)) || (!(button == defines.BUTTON_CALL_DOWN && floor == 0)) {
         //fmt.Printf("bad combination of button and floor")
     }
-    if (!(button == BUTTON_CALL_UP || button == BUTTON_CALL_DOWN || button == BUTTON_COMMAND)) {
+    if (!(button == defines.BUTTON_CALL_UP || button == defines.BUTTON_CALL_DOWN || button == defines.BUTTON_COMMAND)) {
         fmt.Printf("nonvalid button type")
     }
 
@@ -237,15 +227,15 @@ func get_button_signal(button int,floor int) int {
 }
 
 func Set_button_lamp(button int, floor int, value int) {
-    if floor < 0 || floor >= NFloors {
+    if floor < 0 || floor >= defines.NumberOfFloors {
     	//os.Exit(1)
     	fmt.Printf("setting lamp in nonvalid floor")
     }
-    if (!(button == BUTTON_CALL_UP && floor == NFloors - 1)) || (!(button == BUTTON_CALL_DOWN && floor == 0)) {
+    if (!(button == defines.BUTTON_CALL_UP && floor == defines.NumberOfFloors - 1)) || (!(button == defines.BUTTON_CALL_DOWN && floor == 0)) {
     	//os.Exit(1)
     	//fmt.Printf("bad combination of button and floor")
     }
-    if (!(button == BUTTON_CALL_UP || button == BUTTON_CALL_DOWN || button == BUTTON_COMMAND)) {
+    if (!(button == defines.BUTTON_CALL_UP || button == defines.BUTTON_CALL_DOWN || button == defines.BUTTON_COMMAND)) {
     	//os.Exit(1)
     	fmt.Printf("nonvalid button type")
     }

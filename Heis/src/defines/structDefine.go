@@ -3,10 +3,15 @@ package defines
 const (
 	NumberOfElevators	= 10
 	NumberOfFloors		= 4
+	NumberOfButtonTypes = 3
 	
 	IDLE				= 0
 	DOOR_OPEN			= 1
 	MOVING				= 2
+	
+	BUTTON_CALL_UP 		int = 0
+	BUTTON_CALL_DOWN 	int = 1
+	BUTTON_COMMAND 		int = 2
 	
 	UP 					= 1
 	DOWN 				= -1

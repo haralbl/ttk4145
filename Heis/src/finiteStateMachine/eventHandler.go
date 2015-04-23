@@ -4,6 +4,8 @@ import (
 	."fmt"
 	"driver"
 	"defines"
+	"os"
+	"os/exec"
 )
 
 var (
@@ -11,7 +13,7 @@ var (
 )
 
 func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan chan int,
-					commandButtonChan chan int, floorChan chan int, receiveChan chan []byte,
+					commandButtonChan chan int, floorReachedChan chan int, floorLeftChan chan string, receiveChan chan []byte,
 					doorTimerChan chan string, resetStuckTimerChan chan string, enableStuckTimerChan chan int) {
 	var button			int
 	var chosenElevator	string
@@ -29,57 +31,34 @@ func EventHandler(sendChan chan []byte, upButtonChan chan int, downButtonChan ch
 		case button = <- commandButtonChan:
 			chosenElevator = ElevatorStatus.ActiveElevators[0]
 			sendChan <- wrapMessage("newOrder", 2, chosenElevator, button)
-			
 
 		case message = <- receiveChan:
 			elevator, floor, buttonType, MessageType := unwrapMessage(message)
-			handleMessage(sendChan, doorTimerChan, elevator, floor, buttonType, MessageType, enableStuckTimerChan)
+			messageHandler(sendChan, doorTimerChan, elevator, floor, buttonType, MessageType, enableStuckTimerChan)
 			
-		case ElevatorStatus.PreviousFloors[0] = <- floorChan:
-			StateOfShouldStop := shouldStop()
-			sendChan <- wrapMessage("floorReached", 0, "", ElevatorStatus.PreviousFloors[0])
-			resetStuckTimerChan <- "reset"
-			event_floorReached(StateOfShouldStop, doorTimerChan)
+		case ElevatorStatus.PreviousFloors[0] = <- floorReachedChan:
+			event_floorReached(sendChan, resetStuckTimerChan, doorTimerChan)
+			
+		case <- floorLeftChan:
+			event_floorLeft(sendChan)
 			
 		case <- doorTimerChan:
-			Printf("door timer finished\n")
-			sendChan <- wrapMessage("orderCompleted", 0, ElevatorStatus.ActiveElevators[0], ElevatorStatus.PreviousFloors[0])
-			event_doorTimerOut(enableStuckTimerChan)
+			event_doorTimerOut(sendChan, enableStuckTimerChan)
 		}
 	}
 }
 
-func handleMessage(sendChan chan []byte, doorTimerChan chan string, elevatorIP string, floor int, buttonType int, MessageType string, enableStuckTimerChan chan int) {
+func messageHandler(sendChan chan []byte, doorTimerChan chan string, elevatorIP string, floor int, buttonType int, MessageType string, enableStuckTimerChan chan int) {
 	switch (MessageType) {
 	case "":
-		Println("json is eating the message, and shitting out an empty status")
+		Println("received empty message")
+		
 	case "ack":
-		Println("received ack")
-		
-		var elevator int = -1
-		for i:=0; i<defines.NumberOfElevators; i++ {
-			if elevatorIP == ElevatorStatus.ActiveElevators[i] {
-				elevator = i
-			}
-		}
-		if elevator == -1 {
-			Println("It appears to be a fuckup in handlemessage() > case ack. I will take it myself.")
-			elevator = 0
-		}
-		
-		switch(buttonType) {
-		case 0:
-			ElevatorStatus.OrdersUp[elevator][floor] = 1
-			driver.Set_button_lamp(buttonType, floor, 1)
-		case 1:
-			ElevatorStatus.OrdersDown[elevator][floor] = 1
-			driver.Set_button_lamp(buttonType, floor, 1)
-		case 2:
-			ElevatorStatus.OrdersOut[elevator][floor] = 1
-		}
+		event_ackReceived(elevatorIP, floor, buttonType)
 		
 	case "newOrder":
-		if elevatorIP == ElevatorStatus.ActiveElevators[0] {
+		event_newOrder(sendChan, doorTimerChan, enableStuckTimerChan, elevatorIP, floor, buttonType)
+		/*if elevatorIP == ElevatorStatus.ActiveElevators[0] {
 			Println("received new order to handle myself")
 			
 			driver.Set_button_lamp(buttonType, floor, 1)
@@ -102,48 +81,60 @@ func handleMessage(sendChan chan []byte, doorTimerChan chan string, elevatorIP s
 					event_newOrder(sendChan, doorTimerChan, enableStuckTimerChan)
 				}
 			}
-		}
+		}*/
 		
 	case "floorReached":
 		Println("received floorReached")
-		//ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
-		
-		//ElevatorStatus.PreviousFloors[elevatorIPtoIndex(elevatorIP)] = floor
-		//ElevatorStatus.InFloor[elevatorIPtoIndex(elevatorIP)] = receivedStatus.InFloor[currentPositionInReceivedStatus]
-		//ElevatorStatus.Directions[elevatorIPtoIndex(elevatorIP)] = 
+
 	case "orderCompleted":
-		Println("received orderCompleted")
-		ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor]	= 0
-		ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 0
-		ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor]	= 0
-		driver.Set_button_lamp(0, floor, 0)
-		driver.Set_button_lamp(1, floor, 0)
-		if ElevatorStatus.ActiveElevators[0] == elevatorIP {
-			driver.Set_button_lamp(2, floor, 0)
-		}
+		event_orderCompleted(elevatorIP, floor)
+		
 	case "updateAwokenElevator":
 		Println("received updateAwokenElevator")
 		for floor:=0; floor<defines.NumberOfFloors; floor++ {
 			if ElevatorStatus.OrdersUp[0][floor] == 1 {
 				driver.Set_button_lamp(0, floor, 1)
-				event_newOrder(sendChan, doorTimerChan, enableStuckTimerChan)
+				event_newOrder(sendChan, doorTimerChan, enableStuckTimerChan, elevatorIP, floor, buttonType)
 			}
 			if ElevatorStatus.OrdersDown[0][floor] == 1 {
 				driver.Set_button_lamp(1, floor, 1)
-				event_newOrder(sendChan, doorTimerChan, enableStuckTimerChan)
+				event_newOrder(sendChan, doorTimerChan, enableStuckTimerChan, elevatorIP, floor, buttonType)
 			}
 			if ElevatorStatus.OrdersOut[0][floor] == 1 {
 				driver.Set_button_lamp(2, floor, 1)
-				event_newOrder(sendChan, doorTimerChan, enableStuckTimerChan)
+				event_newOrder(sendChan, doorTimerChan, enableStuckTimerChan, elevatorIP, floor, buttonType)
 			}
 		}
 	}
 }
 	
-func event_newOrder(sendChan chan []byte, doorTimerChan chan string, enableStuckTimerChan chan int) {
+func event_newOrder(sendChan chan []byte, doorTimerChan chan string, enableStuckTimerChan chan int, elevatorIP string, floor int, buttonType int) {
+	enableStuckTimerChan <- 1
+	
+	if elevatorIP == ElevatorStatus.ActiveElevators[0] {
+		Println("received new order to handle myself")
+		
+		driver.Set_button_lamp(buttonType, floor, 1)
+		sendChan <- wrapMessage("ack", buttonType, elevatorIP, floor)
+	
+		switch (buttonType) {
+		case 0:
+			if ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
+				ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor] = 1
+			}
+		case 1:
+			if ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
+				ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 1
+			}
+		case 2:
+			if ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor] == 0 {
+				ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor] = 1
+			}
+		}
+	}
+	
 	switch (ElevatorStatus.State) {
 	case defines.IDLE:
-		enableStuckTimerChan <- 1
 		if nextDirection() == defines.STOP {
 			driver.Set_door_open_lamp(1)
 			doorTimerChan <- "start"
@@ -170,15 +161,48 @@ func event_newOrder(sendChan chan []byte, doorTimerChan chan string, enableStuck
 	}
 }
 
-func event_floorReached(StateOfShouldStop int, doorTimerChan chan string) {
+func event_ackReceived(elevatorIP string, floor int, buttonType int) {
+	Println("received ack")
+		
+	var elevator int = -1
+	for i:=0; i<defines.NumberOfElevators; i++ {
+		if elevatorIP == ElevatorStatus.ActiveElevators[i] {
+			elevator = i
+		}
+	}
+	if elevator == -1 {
+		Println("Received ack from unknown IP. I will take the order myself.")
+		elevator = 0
+	}
+	
+	switch(buttonType) {
+	case 0:
+		ElevatorStatus.OrdersUp[elevator][floor] = 1
+		driver.Set_button_lamp(buttonType, floor, 1)
+	case 1:
+		ElevatorStatus.OrdersDown[elevator][floor] = 1
+		driver.Set_button_lamp(buttonType, floor, 1)
+	case 2:
+		ElevatorStatus.OrdersOut[elevator][floor] = 1
+	}
+}
+
+func event_floorReached(sendChan chan []byte, resetStuckTimerChan chan string, doorTimerChan chan string) {
+	sendChan <- wrapMessage("floorReached", 0, "", ElevatorStatus.PreviousFloors[0])
 	driver.Set_floor_indicator(ElevatorStatus.PreviousFloors[0])
+	resetStuckTimerChan <- "reset"
+	
 	switch ElevatorStatus.State {
 	case defines.IDLE:
-		Printf("ERROR, event: floorReached when not moving!")
+		newElevator := exec.Command("gnome-terminal", "-x", "sh", "-c", "go run main.go")
+		_ = newElevator.Run()
+		os.Exit(1)
 	case defines.DOOR_OPEN:
-		Printf("ERROR, event: floorReached when not moving!")
+		newElevator := exec.Command("gnome-terminal", "-x", "sh", "-c", "go run main.go")
+		_ = newElevator.Run()
+		os.Exit(1)
 	case defines.MOVING:
-		if StateOfShouldStop == 1 {
+		if shouldStop() == 1 {
 			driver.Set_motor_direction(defines.STOP)
 			driver.Set_door_open_lamp(1)
 			doorTimerChan <- "start"
@@ -188,10 +212,27 @@ func event_floorReached(StateOfShouldStop int, doorTimerChan chan string) {
 	}
 }
 
-func event_doorTimerOut(enableStuckTimerChan chan int) {
+func event_floorLeft(sendChan chan []byte) {
 	switch ElevatorStatus.State {
 	case defines.IDLE:
-		// do nothing
+		newElevator := exec.Command("gnome-terminal", "-x", "sh", "-c", "go run main.go")
+		_ = newElevator.Run()
+		os.Exit(1)
+	case defines.DOOR_OPEN:
+		newElevator := exec.Command("gnome-terminal", "-x", "sh", "-c", "go run main.go")
+		_ = newElevator.Run()
+		os.Exit(1)
+	case defines.MOVING:
+		// do nothing, all is well
+	}
+}
+
+func event_doorTimerOut(sendChan chan []byte, enableStuckTimerChan chan int) {
+	sendChan <- wrapMessage("orderCompleted", 0, ElevatorStatus.ActiveElevators[0], ElevatorStatus.PreviousFloors[0])
+	switch ElevatorStatus.State {
+	case defines.IDLE:
+		driver.Set_door_open_lamp(0)
+		Printf("ERROR, event_doorTimerOut: door was open in IDLE")
 	case defines.DOOR_OPEN:
 		driver.Set_door_open_lamp(0)
 		if nextDirection() == defines.STOP {  
@@ -212,7 +253,21 @@ func event_doorTimerOut(enableStuckTimerChan chan int) {
 			Printf("ERROR, event_doorTimerOut: nextDirection returns invalid value")
 		}
 	case defines.MOVING:
-		// do nothing
+		newElevator := exec.Command("gnome-terminal", "-x", "sh", "-c", "go run main.go")
+		_ = newElevator.Run()
+		os.Exit(1)
+	}
+}
+
+func event_orderCompleted(elevatorIP string, floor int) {
+	Println("received orderCompleted")
+	ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor]	= 0
+	ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 0
+	ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor]	= 0
+	driver.Set_button_lamp(0, floor, 0)
+	driver.Set_button_lamp(1, floor, 0)
+	if ElevatorStatus.ActiveElevators[0] == elevatorIP {
+		driver.Set_button_lamp(2, floor, 0)
 	}
 }
 
@@ -245,7 +300,7 @@ func nextDirection() int {
 	
 		Println("YOLO etasje 0")
 	
-		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<4; floor++ {
+		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<defines.NumberOfFloors; floor++ {
 			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return defines.UP
 			}
@@ -263,7 +318,7 @@ func nextDirection() int {
 	
 		Println("YOLO retning opp")
 	
-		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<4; floor++ {
+		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<defines.NumberOfFloors; floor++ {
 			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return defines.UP
 			}
@@ -282,7 +337,7 @@ func nextDirection() int {
 				return defines.DOWN
 			}
 		}
-		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<4; floor++ {
+		for floor:=ElevatorStatus.PreviousFloors[0]+1; floor<defines.NumberOfFloors; floor++ {
 			if (ElevatorStatus.OrdersUp[0][floor] | ElevatorStatus.OrdersDown[0][floor] | ElevatorStatus.OrdersOut[0][floor]) != 0 {
 				return defines.UP
 			}

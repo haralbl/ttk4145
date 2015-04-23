@@ -1,5 +1,7 @@
 TODO:
-
+	endre magiske tall til BUTTON_CALL_UP osv.
+	handleMessage funksjonalitet bør flyttes
+	leftFloor
 	/timer assumes 3 elevators
 
 	bruke kun channels til /driver?

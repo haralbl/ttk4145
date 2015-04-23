@@ -32,7 +32,8 @@ func main() {
 	upButtonChan			:= make(chan int)
 	downButtonChan			:= make(chan int)
 	commandButtonChan		:= make(chan int)
-	floorChan				:= make(chan int)
+	floorReachedChan		:= make(chan int)
+	floorLeftChan			:= make(chan string)
 	
 	checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan := make(chan []byte)
 	
@@ -46,9 +47,9 @@ func main() {
 	go driver.UpButtonPoller(upButtonChan)
 	go driver.DownButtonPoller(downButtonChan)
 	go driver.CommandButtonPoller(commandButtonChan)
-	go driver.FloorPoller(floorChan)
+	go driver.FloorPoller(floorReachedChan, floorLeftChan)
 	
-	go finiteStateMachine.Initialize(initChan, floorChan)
+	go finiteStateMachine.Initialize(initChan, floorReachedChan, floorLeftChan)
 	Println(<-initChan)
 	
 	go network.SendManager(sendChan, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan)
@@ -62,7 +63,8 @@ func main() {
 	
 	
 	go finiteStateMachine.CheckAliveElevators(receiveAliveMessageChan, elevatorTimerChan, sendChan)
-	go finiteStateMachine.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorChan, receiveChan, doorTimerChan, resetStuckTimerChan, enableStuckTimerChan)			
+	go finiteStateMachine.EventHandler(sendChan, upButtonChan, downButtonChan, commandButtonChan, floorReachedChan, floorLeftChan,
+										receiveChan, doorTimerChan, resetStuckTimerChan, enableStuckTimerChan)			
 	go finiteStateMachine.CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendChan, checkIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAddedChan)
 	
 	Println(<-doneChan)
