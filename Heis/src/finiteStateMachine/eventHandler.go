@@ -191,6 +191,7 @@ func event_floorLeft(sendChan chan []byte) {
 
 func event_doorTimerOut(sendChan chan []byte, enableStuckTimerChan chan int) {
 	sendChan <- wrapMessage("orderCompleted", 0, ElevatorStatus.ActiveElevators[0], ElevatorStatus.PreviousFloors[0])
+	
 	switch ElevatorStatus.State {
 	case defines.IDLE:
 		driver.Set_door_open_lamp(0)
@@ -223,6 +224,7 @@ func event_doorTimerOut(sendChan chan []byte, enableStuckTimerChan chan int) {
 
 func event_orderCompleted(elevatorIP string, floor int) {
 	Println("received orderCompleted")
+	
 	ElevatorStatus.OrdersUp[elevatorIPtoIndex(elevatorIP)][floor]	= 0
 	ElevatorStatus.OrdersDown[elevatorIPtoIndex(elevatorIP)][floor] = 0
 	ElevatorStatus.OrdersOut[elevatorIPtoIndex(elevatorIP)][floor]	= 0
@@ -235,6 +237,7 @@ func event_orderCompleted(elevatorIP string, floor int) {
 
 func event_wokeUp(sendChan chan []byte, doorTimerChan chan string, enableStuckTimerChan chan int, elevatorIP string, floor int, buttonType int) {
 	Println("received updateAwokenElevator")
+	
 	for floor:=0; floor<defines.NumberOfFloors; floor++ {
 		if ElevatorStatus.OrdersUp[0][floor] == 1 {
 			driver.Set_button_lamp(defines.BUTTON_CALL_UP, floor, 1)

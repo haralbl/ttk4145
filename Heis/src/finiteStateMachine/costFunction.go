@@ -23,27 +23,27 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 		costs[i] += int(math.Abs(float64(floor) - float64(ElevatorStatus.PreviousFloors[i])))
 		
 		// Check if order in same direction in front of elevator
-		if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.UP && buttonType == 0 {
+		if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.UP && buttonType == defines.BUTTON_CALL_UP {
 			costs[i] += 2*defines.NumberOfFloors
-		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == 1 {
+		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == defines.BUTTON_CALL_DOWN {
 			costs[i] += 2*defines.NumberOfFloors
 			
 		// Check if order in opposite direction in front of elevator	
-		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.UP && buttonType == 1 {
+		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.UP && buttonType == defines.BUTTON_CALL_DOWN {
 			costs[i] += 5*defines.NumberOfFloors
-		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == 0 {
+		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == defines.BUTTON_CALL_UP {
 			costs[i] += 5*defines.NumberOfFloors
 
 		// Check if order in opposite direction behind elevator
-		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.UP && buttonType == 1 {
+		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.UP && buttonType == defines.BUTTON_CALL_DOWN {
 			costs[i] += 8*defines.NumberOfFloors
-		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == 0 {
+		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == defines.BUTTON_CALL_UP {
 			costs[i] += 8*defines.NumberOfFloors
 
 		// Check if order in same direction behind elevator
-		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.UP && buttonType == 0 {
+		} else if floor < ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.UP && buttonType == defines.BUTTON_CALL_UP {
 			costs[i] += 11*defines.NumberOfFloors
-		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == 1 {
+		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == defines.BUTTON_CALL_DOWN {
 			costs[i] += 11*defines.NumberOfFloors
 		}
 		if buttonType == 1 || ElevatorStatus.OrdersUp[i][floor] == 1 {

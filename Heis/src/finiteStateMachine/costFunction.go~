@@ -1,7 +1,6 @@
 package finiteStateMachine
 
 import (
-	."fmt"
 	"defines"
 	"math"
 )
