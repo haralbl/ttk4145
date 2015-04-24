@@ -8,7 +8,7 @@ import (
 	"driver"
 )
 
-func Initialize(initChan chan string, floorReachedChan chan int, floorLeftChan chan int) {	
+func Initialize(initChan chan string, floorReachedChan chan int, floorLeftChan chan string) {	
 	for i:=0; i<defines.NumberOfElevators; i++ {
 		ElevatorStatus.ActiveElevators[i] = "empty"
 	} 

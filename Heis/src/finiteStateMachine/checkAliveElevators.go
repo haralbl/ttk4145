@@ -64,13 +64,13 @@ func CheckAliveElevators(receiveAliveMessageChan chan string, elevatorTimerChan 
 			for i:=0; i<defines.NumberOfFloors; i++ {
 				if ElevatorStatus.OrdersUp[elevatorN][i] == 1	{
 					if lowestIPindex == 0 {
-						sendChan <- wrapMessage("newOrder", 0, lowestIP, i)
+						sendChan <- wrapMessage("newOrder", defines.BUTTON_CALL_UP, lowestIP, i)
 					}
 					ElevatorStatus.OrdersUp[elevatorN][i] = 0
 				}
 				if ElevatorStatus.OrdersDown[elevatorN][i] == 1	{
 					if lowestIPindex == 0 {
-						sendChan <- wrapMessage("newOrder", 1, lowestIP, i)
+						sendChan <- wrapMessage("newOrder", defines.BUTTON_CALL_DOWN, lowestIP, i)
 					}
 					ElevatorStatus.OrdersDown[elevatorN][i] = 0
 				}

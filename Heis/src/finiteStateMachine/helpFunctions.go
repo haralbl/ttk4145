@@ -35,12 +35,18 @@ func Initialize(initChan chan string, floorReachedChan chan int, floorLeftChan c
 }
 
 func PrintStatus(status defines.ElevatorStatus_t) {
-	Printf("Active elevators: %s, %s, %s\n", status.ActiveElevators[0],	status.ActiveElevators[1],	status.ActiveElevators[2])
-	Printf("PreviousFloors:	  %d, %d, %d\n", status.PreviousFloors[0],	status.PreviousFloors[1],	status.PreviousFloors[2])
-	Printf("InFloor:		  %d, %d, %d\n", status.InFloor[0],			status.InFloor[1],			status.InFloor[2])
-	Printf("Directions:		  %d, %d, %d\n", status.Directions[0],		status.Directions[1],		status.Directions[2])
+	
+	Printf("Active elevators: ")
+	Printf("PreviousFloors:	  ")
+	Printf("InFloor:		  ")
+	Printf("Directions:		  ")
 	
 	for e:=0; e<defines.NumberOfElevators; e++ {
+		Println(status.ActiveElevators[e])
+		Println(status.PreviousFloors[e])
+		Println(status.InFloor[e])
+		Println(status.Directions[e])
+	
 		Printf("\nElevator %d\nOrdersUp	OrdersDown	OrdersOut\n", e)
 		for i:=0; i<defines.NumberOfFloors; i++ {
 			Printf("%d		%d		%d\n", status.OrdersUp[e][i], status.OrdersDown[e][i], 
@@ -138,15 +144,15 @@ func CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNotAdded(sendCh
 				
 				if elevator != -1 {
 					switch(buttonType) {
-					case 0:
+					case defines.BUTTON_CALL_UP:
 						if ElevatorStatus.OrdersUp[elevator][floor] != 1 {
 							orderNotAddedFlag = 1
 						}
-					case 1:
+					case defines.BUTTON_CALL_DOWN:
 						if ElevatorStatus.OrdersDown[elevator][floor] != 1 {
 							orderNotAddedFlag = 1
 						}
-					case 2:
+					case defines.BUTTON_COMMAND:
 						if ElevatorStatus.OrdersOut[elevator][floor] != 1 {
 							orderNotAddedFlag = 1
 						}
