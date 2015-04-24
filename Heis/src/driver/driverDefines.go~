@@ -17,10 +17,10 @@ const bUTTON_DOWN2      =  (0x200+0)
 const bUTTON_UP3        =  (0x200+1)
 const bUTTON_DOWN3      =  (0x200+2)
 const bUTTON_DOWN4      =  (0x200+3)
-const sENSOR_FLOOR1     =  (0x200+4)
-const sENSOR_FLOOR2     =  (0x200+5)
-const sENSOR_FLOOR3     =  (0x200+6)
-const sENSOR_FLOOR4     =  (0x200+7)
+const bENSOR_FLOOR1     =  (0x200+4)
+const bENSOR_FLOOR2     =  (0x200+5)
+const bENSOR_FLOOR3     =  (0x200+6)
+const bENSOR_FLOOR4     =  (0x200+7)
 
 //out port 3
 const pORT3             =  3
