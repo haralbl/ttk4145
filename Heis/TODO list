@@ -1,13 +1,5 @@
 TODO:
-	endre magiske tall til BUTTON_CALL_UP osv.
-	handleMessage funksjonalitet bør flyttes
-	leftFloor
-	/timer assumes 3 elevators
-
-	bruke kun channels til /driver?
-	
 	Vite om et kortere navn til CheckIfOrderIsAddedToQueueAndPotentiallyTakeTheOrderMyselfIfNot()
-
 
 script:
 	export GOROOT=/usr/lib/go (trenger mest sanns ikke denne, virket uten!!)
@@ -19,8 +11,10 @@ script:
 	chmod 777 sshlogin.sh
 	./sshlogin.sh
 	
-	ssh martlei@129.241.187.158
+	ssh haralbl@129.241.187.158
+	rm -r ttk4145
 	scp -r /home/haralbl/ttk4145 martlei@129.241.187.158:/home/martlei
+	git clone https://github.com/haralbl/ttk4145.git
 
 Plan:
 	når knappetrykk registreres, etasje nåes eller ordre fullføres:

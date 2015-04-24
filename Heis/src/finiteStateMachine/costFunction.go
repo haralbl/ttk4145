@@ -46,10 +46,10 @@ func costFunction(floor int, buttonType int) (cheapestElevator int) {
 		} else if floor > ElevatorStatus.PreviousFloors[i] && ElevatorStatus.Directions[i] == defines.DOWN && buttonType == defines.BUTTON_CALL_DOWN {
 			costs[i] += 11*defines.NumberOfFloors
 		}
-		if buttonType == 1 || ElevatorStatus.OrdersUp[i][floor] == 1 {
+		if buttonType == defines.BUTTON_CALL_UP && ElevatorStatus.OrdersUp[i][floor] == 1 {
 			costs[i] = 0
 		}
-		if buttonType == -1 || ElevatorStatus.OrdersDown[i][floor] == 1 {
+		if buttonType == defines.BUTTON_CALL_DOWN && ElevatorStatus.OrdersDown[i][floor] == 1 {
 			costs[i] = 0
 		}
 	}
